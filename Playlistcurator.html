@@ -1,0 +1,908 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Playlist Curator</title>
+<meta name="theme-color" content="#0e0e13">
+<meta name="apple-mobile-web-app-title" content="Curator">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAFaUlEQVR4nO3dy3IbRRTG8ZZLT2BJoeyieAiSUMWeBJKQInkD9hAKKG4BlrAAEtuJw2vEduJcqmAbs2PLC0RUIcnPIBZyovHlk0ajnj6npf+vtPFFmqPTR31membsxlv/fByAszSHQ+sQ4NWKdQDwqxlCwzoGONUMtBUItBVItBVItBVItBVItBVIzByQmmHIzIGzMXNAanKwAoW2Aom2AonigMQ6BySWzyExc0BinwMSbQUSbQUSbQUSxQGpOWT5HAIzByR2SCFxKAuJtgKJtgKJmQMS+xyQaCuQmtYBYOzl29uTf+HNv2+liWSEC4yzknaw2CH14uX5+9YhnMR9K2a6s1dD4sFihzSd7vl7c79G0sHiULYu3Qvzl8IpaQeLo5VoaqkGU7SV6roXtpJvk7biUvfilnUIBm2FmeNs3Yub1iGclnjmwCsuq8HS8hYHpTDVEi2fd9/ZsA5hbiyfwwmKAxL3reQk8WAxc0CiOCAt0dHKIqCtwAmWz/PCzAEfOCubFc7KLo/1v74pfvnvu79OewZnZRfXiWpwjrZSo/WD2KVAW8nX+sG3x78RPbdp2woTxzzWTlZDvbhvxa+1g+9OfS9x9rjA2I21F6erwRT3rRhyVw2maCtjay9uu88GbcWK/1SkjZBzK5BoK0X+U8FZWfjAlWAF/lPBlWBwguKAxH0rY/5TwX0r8ILigMQ6R5H/VLB8bsV/KrgSzI7/VLBDCh9oKwX+U0FbseM/FbQV+EBxQOKsbIH/VKSNkPtWxvyngvtWDPlPBSukVvyngguM4QRtpch/KljngA/scxT4TwXL53b8p4K2Ah9oKwX+U0FbseM/Ffw1wUXx33s/qh+98edPKSOphvtWxqKkonfphzK/Vqybc3/8XPLFEw8WM0c0JctCPbF8iSRDcURQuSyiv0hc7JAWVUlF79L30ePQOCtrZcZU9C6nLIsQAmdlM2FQGcnRVorKpqJ3+XatcWi0FSv+U8EKqZ1Sqei9b/iHbDnx5phpZaRGcUDK+L6V3gfy31mce/5LlVf0nwruW5mgrwuiqFg3ndKFMjUVJbden/T3reSh8sCMnli+RPBaBm2lfyXCf0orVVvuU8EfqT0mSmWgGr/rHP0rXyffptNUhBA6z34LIbDOEYJNZeAkj8vn/atGleEvFWMWsa2E0PD3sDIlsM7TOyZhdZ7eMRkId22lf/Ur6xBwxFdb6V8zrQxPqTjGKDBvbcXW9Ag7T+4mjqnz5K7VcLhrK/6lrI/0tVjUHNp/Xo8Mrn1pG4CfVLxmG9JKGAYvD3OlQ23vbyQIp72/YTsitJWK6q6PNPU3md/lcwuzpaK9vxlCGHz4RdwgRi/rYVx8HcpaaT/enOe5g+vR6mOeSKLL5noOz0YjOmeJuCqLEdrKSIQktB9vhRAG1z+v9kSHA9FoPXJUsBUyO79XYxPfhLdT30YjyuBKsNrVloH2o3v6hxmknUNZSL6KY+JHbUG2mJFGa9dddgYffZZmQ+29+2k2lKnM7luJa5nfexm+2spIK8kHOs1Wsubteo6jR2tvu9a33drbNn+P/h+N1R3XH6DDG7fivmBrt96yWyQe20pR3LGkMmbSWN3JI1+HNz6d5+mt3QexIlkejdWHeRTHyOHNmUuktUNZVNRYfZhr7g5vfqJ+1Nr5PWUkiyrjU/ZUQN242AcS13NA8n4oC0NLfW4Fk3GxDyTaCiR2SCFxKAuJtgKJtgKJmQMS+xyQaCuQaCuQWCGFxLkVSLQVSOyQQuJQFhJtBRJtBRJtBRIzByT2OSBRHJBYPofEzAGJcyuQaCuQaCuQWOeAxMwBieVzSLQVSLQVSLQVSLQVSLQVSP8DSrWG5ZpWk8MAAAAASUVORK5CYII=">
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAFaUlEQVR4nO3dy3IbRRTG8ZZLT2BJoeyieAiSUMWeBJKQInkD9hAKKG4BlrAAEtuJw2vEduJcqmAbs2PLC0RUIcnPIBZyovHlk0ajnj6npf+vtPFFmqPTR31membsxlv/fByAszSHQ+sQ4NWKdQDwqxlCwzoGONUMtBUItBVItBVItBVItBVItBVIzByQmmHIzIGzMXNAanKwAoW2Aom2AonigMQ6BySWzyExc0BinwMSbQUSbQUSbQUSxQGpOWT5HAIzByR2SCFxKAuJtgKJtgKJmQMS+xyQaCuQmtYBYOzl29uTf+HNv2+liWSEC4yzknaw2CH14uX5+9YhnMR9K2a6s1dD4sFihzSd7vl7c79G0sHiULYu3Qvzl8IpaQeLo5VoaqkGU7SV6roXtpJvk7biUvfilnUIBm2FmeNs3Yub1iGclnjmwCsuq8HS8hYHpTDVEi2fd9/ZsA5hbiyfwwmKAxL3reQk8WAxc0CiOCAt0dHKIqCtwAmWz/PCzAEfOCubFc7KLo/1v74pfvnvu79OewZnZRfXiWpwjrZSo/WD2KVAW8nX+sG3x78RPbdp2woTxzzWTlZDvbhvxa+1g+9OfS9x9rjA2I21F6erwRT3rRhyVw2maCtjay9uu88GbcWK/1SkjZBzK5BoK0X+U8FZWfjAlWAF/lPBlWBwguKAxH0rY/5TwX0r8ILigMQ6R5H/VLB8bsV/KrgSzI7/VLBDCh9oKwX+U0FbseM/FbQV+EBxQOKsbIH/VKSNkPtWxvyngvtWDPlPBSukVvyngguM4QRtpch/KljngA/scxT4TwXL53b8p4K2Ah9oKwX+U0FbseM/Ffw1wUXx33s/qh+98edPKSOphvtWxqKkonfphzK/Vqybc3/8XPLFEw8WM0c0JctCPbF8iSRDcURQuSyiv0hc7JAWVUlF79L30ePQOCtrZcZU9C6nLIsQAmdlM2FQGcnRVorKpqJ3+XatcWi0FSv+U8EKqZ1Sqei9b/iHbDnx5phpZaRGcUDK+L6V3gfy31mce/5LlVf0nwruW5mgrwuiqFg3ndKFMjUVJbden/T3reSh8sCMnli+RPBaBm2lfyXCf0orVVvuU8EfqT0mSmWgGr/rHP0rXyffptNUhBA6z34LIbDOEYJNZeAkj8vn/atGleEvFWMWsa2E0PD3sDIlsM7TOyZhdZ7eMRkId22lf/Ur6xBwxFdb6V8zrQxPqTjGKDBvbcXW9Ag7T+4mjqnz5K7VcLhrK/6lrI/0tVjUHNp/Xo8Mrn1pG4CfVLxmG9JKGAYvD3OlQ23vbyQIp72/YTsitJWK6q6PNPU3md/lcwuzpaK9vxlCGHz4RdwgRi/rYVx8HcpaaT/enOe5g+vR6mOeSKLL5noOz0YjOmeJuCqLEdrKSIQktB9vhRAG1z+v9kSHA9FoPXJUsBUyO79XYxPfhLdT30YjyuBKsNrVloH2o3v6hxmknUNZSL6KY+JHbUG2mJFGa9dddgYffZZmQ+29+2k2lKnM7luJa5nfexm+2spIK8kHOs1Wsubteo6jR2tvu9a33drbNn+P/h+N1R3XH6DDG7fivmBrt96yWyQe20pR3LGkMmbSWN3JI1+HNz6d5+mt3QexIlkejdWHeRTHyOHNmUuktUNZVNRYfZhr7g5vfqJ+1Nr5PWUkiyrjU/ZUQN242AcS13NA8n4oC0NLfW4Fk3GxDyTaCiR2SCFxKAuJtgKJtgKJmQMS+xyQaCuQaCuQWCGFxLkVSLQVSOyQQuJQFhJtBRJtBRJtBRIzByT2OSBRHJBYPofEzAGJcyuQaCuQaCuQWOeAxMwBieVzSLQVSLQVSLQVSLQVSLQVSP8DSrWG5ZpWk8MAAAAASUVORK5CYII=">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#0e0e13; --panel:#17171f; --panel2:#1f1f2a; --line:#2c2c3a;
+  --text:#f3f3f7; --muted:#9a9aae; --green:#1ed760; --green-d:#16b34f;
+  --pink:#ff4f7b; --amber:#ffb84d; --radius:18px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;background:radial-gradient(1200px 600px at 80% -10%,#1ed76018,transparent 60%),radial-gradient(900px 500px at -10% 110%,#ff4f7b14,transparent 60%),var(--bg)}
+button{font:inherit;cursor:pointer;border:0;color:inherit;background:none}
+input{font:inherit;color:var(--text)}
+#app{max-width:520px;margin:0 auto;padding:16px 16px 40px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.02em;font-size:18px}
+.logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--green),#0fa3a3);display:grid;place-items:center;font-size:16px}
+.who{font-size:13px;color:var(--muted);display:flex;gap:10px;align-items:center}
+.who button{color:var(--muted);text-decoration:underline;font-size:13px}
+.screen{display:none;animation:fade .25s ease}
+.screen.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.step{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--green);font-weight:700;margin:6px 0 6px}
+h1{font-size:30px;line-height:1.1;letter-spacing:-.03em;margin:0 0 8px}
+h2{font-size:22px;margin:0 0 6px;letter-spacing:-.02em}
+.lead{color:var(--muted);margin:0 0 22px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+label.f{display:block;font-size:13px;color:var(--muted);margin:0 0 6px}
+.text{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:18px;outline:none}
+.text:focus{border-color:var(--green)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 20px;border-radius:999px;font-weight:700;transition:transform .1s,background .2s,opacity .2s}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--green);color:#06120a}
+.btn.primary:hover{background:#3be477}
+.btn.ghost{background:var(--panel2);border:1px solid var(--line)}
+.btn.wide{width:100%}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.row{display:flex;gap:10px;margin-top:18px}
+.row .btn{flex:1}
+.hint{font-size:13px;color:var(--muted);margin-top:10px}
+.hint code,.code{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:12.5px;color:var(--text)}
+.warn{background:#ffb84d14;border:1px solid #ffb84d55;color:#ffd79a;border-radius:12px;padding:12px;font-size:14px;margin-bottom:14px}
+ol.setup{padding-left:20px;color:var(--muted);font-size:14px;margin:0 0 16px}
+ol.setup li{margin:4px 0}
+/* duration */
+.hours{font-size:64px;font-weight:800;letter-spacing:-.04em;text-align:center;line-height:1}
+.hours small{font-size:20px;color:var(--muted);font-weight:600;margin-left:6px}
+.songsEst{text-align:center;color:var(--muted);margin:6px 0 18px}
+input[type=range]{width:100%;accent-color:var(--green)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
+.chip{padding:8px 14px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:14px}
+.chip.on{background:var(--green);color:#06120a;border-color:var(--green);font-weight:700}
+/* events */
+.events{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ev{text-align:left;background:var(--panel);border:1.5px solid var(--line);border-radius:16px;padding:14px;transition:border-color .15s,background .15s}
+.ev .e{font-size:24px}
+.ev b{display:block;margin:6px 0 2px}
+.ev span{font-size:12.5px;color:var(--muted);line-height:1.35;display:block}
+.ev.on{border-color:var(--green);background:#1ed76012}
+.ev .sug{font-size:10.5px;color:var(--green);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+#customWrap{display:none;margin-top:12px}
+/* swipe */
+.topbar{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}
+.topbar h2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.count{font-size:13px;color:var(--muted);white-space:nowrap}
+.bar{height:8px;background:var(--panel2);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green),#7ef0a8);transition:width .35s}
+.barlbl{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin:6px 0 14px}
+#deck{position:relative;height:min(560px,calc(100vh - 250px));height:min(560px,calc(100dvh - 250px));min-height:430px}
+.nodev{padding:4px 18px 16px;text-align:center;font-size:14px;color:#d6d6e0}
+.nodev p{margin:0 0 12px}
+.nodevBtns{display:flex;gap:10px}
+.nodevBtns .btn{flex:1;padding:12px 14px;text-decoration:none;font-size:15px}
+.linkbtn{margin-top:10px;font-size:13px;color:var(--muted);text-decoration:underline}
+body.touch .keys{display:none}
+@media (max-width:480px){
+  #app{padding:12px 14px calc(24px + env(safe-area-inset-bottom))}
+  header{margin-bottom:12px}
+  h1{font-size:26px}
+  .lead{margin-bottom:16px}
+  .act{width:62px;height:62px}
+  .actions{gap:18px;margin-top:16px}
+  .meta h3{font-size:20px}
+}
+#deck::before{content:"";position:absolute;inset:14px 14px -8px;border-radius:24px;background:var(--panel);border:1px solid var(--line);opacity:.6;transform:scale(.96)}
+.card{position:absolute;inset:0;background:var(--panel);border:1px solid var(--line);border-radius:24px;overflow:hidden;display:flex;flex-direction:column;touch-action:none;user-select:none;transition:transform .28s ease,opacity .28s ease;box-shadow:0 20px 50px #0008}
+.art{position:relative;flex:1;min-height:200px;background:#222 center/cover no-repeat}
+.art::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,#17171ff0)}
+.stamp{position:absolute;top:22px;z-index:2;padding:6px 14px;border:3px solid;border-radius:10px;font-weight:900;font-size:26px;letter-spacing:.08em;opacity:0;transform:rotate(-12deg)}
+.stamp.like{left:20px;color:var(--green);border-color:var(--green)}
+.stamp.nope{right:20px;color:var(--pink);border-color:var(--pink);transform:rotate(12deg)}
+.meta{padding:14px 18px 6px}
+.meta h3{margin:0;font-size:22px;letter-spacing:-.02em;line-height:1.15}
+.meta p{margin:3px 0 0;color:#d6d6e0}
+.meta .sub{color:var(--muted);font-size:13px}
+.player{display:flex;align-items:center;justify-content:center;gap:14px;padding:8px 16px 16px}
+.pbtn{width:44px;height:44px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);display:grid;place-items:center;font-size:13px;font-weight:700;color:var(--muted)}
+.ring{position:relative;width:60px;height:60px}
+.ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:4}
+.ring .bg{stroke:var(--line)}
+.ring .fg{stroke:var(--green);stroke-linecap:round;transition:stroke-dashoffset .1s linear}
+.ring button{position:absolute;inset:6px;border-radius:50%;background:var(--green);color:#06120a;font-size:18px;display:grid;place-items:center}
+.hookLbl{text-align:center;font-size:12px;color:var(--muted);margin-top:-8px;padding-bottom:12px}
+.embed{padding:6px 12px 12px}
+.embed iframe{width:100%;height:80px;border:0;border-radius:12px}
+.actions{display:flex;justify-content:center;align-items:center;gap:22px;margin-top:20px}
+.act{width:68px;height:68px;border-radius:50%;background:var(--panel);border:1.5px solid var(--line);font-size:28px;display:grid;place-items:center;box-shadow:0 8px 24px #0006;transition:transform .12s}
+.act:active{transform:scale(.9)}
+.act.no{color:var(--pink);border-color:#ff4f7b66}
+.act.yes{color:var(--green);border-color:#1ed76066}
+.act.small{width:48px;height:48px;font-size:18px;color:var(--amber)}
+.keys{text-align:center;font-size:12px;color:var(--muted);margin-top:12px}
+.center{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--muted);z-index:1}
+.spin{width:34px;height:34px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--green);animation:sp 0.9s linear infinite;margin:0 auto 12px}
+@keyframes sp{to{transform:rotate(360deg)}}
+/* review */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+.stat b{display:block;font-size:22px}
+.stat span{font-size:12px;color:var(--muted)}
+ul.tracks{list-style:none;margin:0;padding:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);max-height:46vh;overflow:auto}
+ul.tracks li{display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid var(--line)}
+ul.tracks li:last-child{border-bottom:0}
+ul.tracks img{width:42px;height:42px;border-radius:6px;object-fit:cover;background:#222;flex:none}
+ul.tracks .t{flex:1;min-width:0}
+ul.tracks .t b,ul.tracks .t span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ul.tracks .t span{font-size:13px;color:var(--muted)}
+ul.tracks .d{font-size:13px;color:var(--muted)}
+ul.tracks .rm{color:var(--muted);width:30px;height:30px;border-radius:50%}
+ul.tracks .rm:hover{background:var(--panel2);color:var(--pink)}
+.n{width:22px;text-align:right;font-size:12px;color:var(--muted);flex:none}
+.saved{margin-top:12px;padding:12px;border-radius:12px;background:#1ed76014;border:1px solid #1ed76055;font-size:14px;display:none}
+.saved a{color:var(--green);font-weight:700}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(30px);background:#2a2a38;border:1px solid var(--line);padding:12px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;max-width:90vw;z-index:50}
+#toast.on{opacity:1;transform:translateX(-50%)}
+.back{color:var(--muted);font-size:14px;margin-bottom:8px;padding:4px 0}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand"><div class="logo">🎧</div>Playlist Curator</div>
+    <div class="who" id="whoWrap" hidden><span id="who"></span><button id="btnLogout">Log out</button></div>
+  </header>
+
+  <!-- CONNECT -->
+  <section class="screen" id="s-connect">
+    <div class="step">Setup</div>
+    <h1>Connect Spotify</h1>
+    <p class="lead">Swipe through songs, hear the hook, and build the playlist for your event.</p>
+    <div id="envWarn"></div>
+    <div class="panel">
+      <ol class="setup">
+        <li>Create an app at <span class="code">developer.spotify.com/dashboard</span> (check Web API, plus Web Playback SDK if you'll also use a computer).</li>
+        <li>Add this exact Redirect URI: <span class="code" id="redirectUri"></span></li>
+        <li>Paste the app's Client ID below.</li>
+      </ol>
+      <label class="f" for="clientId">Spotify Client ID</label>
+      <input class="text" id="clientId" placeholder="e.g. 3f9a1c…" autocomplete="off" spellcheck="false">
+      <button class="btn primary wide" id="btnLogin" style="margin-top:14px">Connect with Spotify</button>
+      <p class="hint">Requires Spotify Premium for in-app song clips. Your Client ID and login stay in this browser only.</p>
+    </div>
+  </section>
+
+  <!-- TITLE -->
+  <section class="screen" id="s-title">
+    <div class="step">Step 1 of 3</div>
+    <h1>Name your playlist</h1>
+    <p class="lead">We'll use it on Spotify and in your Excel export.</p>
+    <input class="text" id="title" maxlength="100" placeholder="e.g. Sam & Marina — Reception">
+    <div class="row"><button class="btn primary" id="btnTitleNext" disabled>Next</button></div>
+  </section>
+
+  <!-- DURATION -->
+  <section class="screen" id="s-duration">
+    <button class="back" data-go="title">← Back</button>
+    <div class="step">Step 2 of 3</div>
+    <h1>How long is the event?</h1>
+    <p class="lead">This sets how much music you'll pick before the playlist is complete.</p>
+    <div class="panel">
+      <div class="hours"><span id="hoursVal">3</span><small>hours</small></div>
+      <div class="songsEst" id="songsEst"></div>
+      <input type="range" id="hours" min="0.5" max="8" step="0.5" value="3">
+      <div class="chips" id="hourChips"></div>
+    </div>
+    <div class="row"><button class="btn primary" id="btnDurNext">Next</button></div>
+  </section>
+
+  <!-- EVENT -->
+  <section class="screen" id="s-event">
+    <button class="back" data-go="duration">← Back</button>
+    <div class="step">Step 3 of 3</div>
+    <h1>What's it for?</h1>
+    <p class="lead">Songs are pulled to match the event.</p>
+    <div class="events" id="events"></div>
+    <div id="customWrap">
+      <label class="f" for="custom">Describe the vibe (genre, mood, artist…)</label>
+      <input class="text" id="custom" placeholder="e.g. 70s soul, country, beach reggae">
+    </div>
+    <div class="row"><button class="btn primary" id="btnStart" disabled>Start swiping →</button></div>
+  </section>
+
+  <!-- SWIPE -->
+  <section class="screen" id="s-swipe">
+    <div class="topbar"><h2 id="swTitle"></h2><span class="count" id="swCount"></span></div>
+    <div class="bar"><i id="swBar"></i></div>
+    <div class="barlbl"><span id="swTime"></span><span id="swLeft"></span></div>
+    <div id="deck"></div>
+    <div class="actions">
+      <button class="act small" id="btnUndo" title="Undo (Z)">↶</button>
+      <button class="act no" id="btnNo" title="Pass (←)">✕</button>
+      <button class="act yes" id="btnYes" title="Add (→)">♥</button>
+      <button class="act small" id="btnDone" title="Finish & review">✓</button>
+    </div>
+    <div class="keys">← pass · → add · space replay · Z undo</div>
+  </section>
+
+  <!-- REVIEW -->
+  <section class="screen" id="s-review">
+    <div class="step">Your playlist</div>
+    <h1 id="rvTitle"></h1>
+    <div class="stats">
+      <div class="stat"><b id="rvSongs">0</b><span>songs</span></div>
+      <div class="stat"><b id="rvLen">0:00</b><span>total length</span></div>
+      <div class="stat"><b id="rvPct">0%</b><span>of target</span></div>
+    </div>
+    <ul class="tracks" id="rvList"></ul>
+    <div class="row">
+      <button class="btn primary" id="btnSave">Save to Spotify</button>
+      <button class="btn ghost" id="btnXlsx">Download Excel</button>
+    </div>
+    <div class="saved" id="saved"></div>
+    <div class="row">
+      <button class="btn ghost" id="btnMore">Keep swiping</button>
+      <button class="btn ghost" id="btnRestart">New playlist</button>
+    </div>
+  </section>
+</div>
+<div id="toast"></div>
+
+<script>
+/* =========================================================================
+   Event song pools. Spotify removed its recommendations API for new apps,
+   so each event starts from a curated list (Title|Artist), resolved through
+   Spotify search, then tops up with genre searches. Edit freely.
+   ========================================================================= */
+const EVENTS = {
+  reception: {
+    label: 'Wedding Reception', emoji: '💃',
+    blurb: 'Dance-floor fillers, sing-alongs and first-dance favorites',
+    keywords: /wedding|reception|bride|groom|marriage|& |\+ /i,
+    queries: ['genre:"dance pop"', 'genre:disco', 'genre:motown', 'genre:funk', 'genre:"pop" year:2012-2026', 'genre:"classic soul"'],
+    seeds: [
+      'Shout|The Isley Brothers','September|Earth, Wind & Fire','Dancing Queen|ABBA','I Wanna Dance with Somebody|Whitney Houston',
+      'Uptown Funk|Mark Ronson','Mr. Brightside|The Killers','Don\'t Stop Me Now|Queen','Shut Up and Dance|WALK THE MOON',
+      'Celebration|Kool & The Gang','Valerie|Mark Ronson','Signed, Sealed, Delivered (I\'m Yours)|Stevie Wonder','Crazy in Love|Beyoncé',
+      'Single Ladies (Put a Ring on It)|Beyoncé','Love On Top|Beyoncé','Hey Ya!|OutKast','Yeah!|Usher','Can\'t Stop the Feeling!|Justin Timberlake',
+      'Shake It Off|Taylor Swift','Levitating|Dua Lipa','Don\'t Start Now|Dua Lipa','Good as Hell|Lizzo','Sweet Caroline|Neil Diamond',
+      'Livin\' On A Prayer|Bon Jovi','You Make My Dreams|Daryl Hall & John Oates','Twist And Shout|The Beatles','Land of 1000 Dances|Wilson Pickett',
+      'Brown Eyed Girl|Van Morrison','Get Lucky|Daft Punk','Party In The U.S.A.|Miley Cyrus','Wagon Wheel|Darius Rucker','Love Shack|The B-52\'s',
+      'I Gotta Feeling|Black Eyed Peas','Wannabe|Spice Girls','Bye Bye Bye|*NSYNC','Everybody (Backstreet\'s Back)|Backstreet Boys',
+      'Mambo No. 5|Lou Bega','Cupid Shuffle|Cupid','Wobble|V.I.C.','Gimme! Gimme! Gimme!|ABBA','Ain\'t No Mountain High Enough|Marvin Gaye',
+      'I Want You Back|The Jackson 5','Rock with You|Michael Jackson','Billie Jean|Michael Jackson','Footloose|Kenny Loggins',
+      'Girls Just Want to Have Fun|Cyndi Lauper','Dancing in the Moonlight|Toploader','Perfect|Ed Sheeran','At Last|Etta James',
+      'Thinking out Loud|Ed Sheeran','Marry You|Bruno Mars','24K Magic|Bruno Mars','Treasure|Bruno Mars','Espresso|Sabrina Carpenter',
+      'Flowers|Miley Cyrus','As It Was|Harry Styles','Blinding Lights|The Weeknd','Despacito|Luis Fonsi','Hips Don\'t Lie|Shakira',
+      'Last Dance|Donna Summer','Don\'t Stop Believin\'|Journey','I\'m Gonna Be (500 Miles)|The Proclaimers','Tití Me Preguntó|Bad Bunny'
+    ]
+  },
+  ceremony: {
+    label: 'Ceremony & Cocktail Hour', emoji: '🥂',
+    blurb: 'Romantic, acoustic and jazzy — warm background energy',
+    keywords: /ceremony|cocktail|aisle|vows|engagement|rehearsal|brunch/i,
+    queries: ['genre:"acoustic pop"', 'genre:"vocal jazz"', 'genre:"indie folk"', 'genre:"classic soul"', 'love genre:"singer-songwriter"'],
+    seeds: [
+      'Can\'t Help Falling in Love|Elvis Presley','A Thousand Years|Christina Perri','Make You Feel My Love|Adele','Here Comes The Sun|The Beatles',
+      'Better Together|Jack Johnson','L-O-V-E|Nat King Cole','The Way You Look Tonight|Frank Sinatra','Fly Me To The Moon|Frank Sinatra',
+      'Lucky|Jason Mraz','I\'m Yours|Jason Mraz','Bloom|The Paper Kites','First Day of My Life|Bright Eyes','Home|Edward Sharpe & The Magnetic Zeros',
+      'Banana Pancakes|Jack Johnson','Yellow|Coldplay','Lover|Taylor Swift','All of Me|John Legend','Tenerife Sea|Ed Sheeran',
+      'Die With A Smile|Lady Gaga','Golden Hour|JVKE','A Sunday Kind Of Love|Etta James','Feeling Good|Michael Bublé','Everything|Michael Bublé',
+      'Sway|Michael Bublé','Come Away With Me|Norah Jones','Riptide|Vance Joy','Ho Hey|The Lumineers','Saturday Sun|Vance Joy',
+      'Moon River|Andy Williams','What A Wonderful World|Louis Armstrong','La Vie En Rose|Louis Armstrong','Dreams|Fleetwood Mac',
+      'Harvest Moon|Neil Young','Into the Mystic|Van Morrison','Ends of the Earth|Lord Huron','Put Your Records On|Corinne Bailey Rae',
+      'Sunday Morning|Maroon 5','Make It With You|Bread','Turning Page|Sleeping At Last','Marry Me|Train','Bubbly|Colbie Caillat',
+      'Kiss Me|Sixpence None The Richer','You Are the Best Thing|Ray LaMontagne','Lovely Day|Bill Withers','Best Part|Daniel Caesar'
+    ]
+  },
+  party: {
+    label: 'House Party', emoji: '🎉',
+    blurb: 'Current hits, hip-hop, dance and Latin bangers',
+    keywords: /party|birthday|bday|rager|pregame|night out|club|bash/i,
+    queries: ['genre:"dance pop" year:2016-2026', 'genre:"hip hop" year:2012-2026', 'genre:edm', 'genre:reggaeton', 'genre:"pop rap"'],
+    seeds: [
+      'Espresso|Sabrina Carpenter','APT.|ROSÉ','HOT TO GO!|Chappell Roan','Good Luck, Babe!|Chappell Roan','Not Like Us|Kendrick Lamar',
+      'HUMBLE.|Kendrick Lamar','SICKO MODE|Travis Scott','Starboy|The Weeknd','Blinding Lights|The Weeknd','Levitating|Dua Lipa','Houdini|Dua Lipa',
+      'One Kiss|Calvin Harris','Feel So Close|Calvin Harris','Titanium|David Guetta','Lean On|Major Lazer','Turn Down for What|DJ Snake',
+      'Get Lucky|Daft Punk','Uptown Funk|Mark Ronson','Mr. Brightside|The Killers','Yeah!|Usher','In Da Club|50 Cent','Hotline Bling|Drake',
+      'God\'s Plan|Drake','Truth Hurts|Lizzo','bad guy|Billie Eilish','Cruel Summer|Taylor Swift','Party Rock Anthem|LMFAO','TiK ToK|Kesha',
+      'Umbrella|Rihanna','We Found Love|Rihanna','Don\'t Stop The Music|Rihanna','Toxic|Britney Spears','Gasolina|Daddy Yankee','DÁKITI|Bad Bunny',
+      'Mi Gente|J Balvin','Padam Padam|Kylie Minogue','Physical|Dua Lipa','Pump It|Black Eyed Peas','I Gotta Feeling|Black Eyed Peas',
+      'Low|Flo Rida','Good Feeling|Flo Rida','Watermelon Sugar|Harry Styles','Calm Down|Rema','Murder On The Dancefloor|Sophie Ellis-Bextor',
+      'Can\'t Hold Us|Macklemore & Ryan Lewis','Hey Ya!|OutKast','Pepas|Farruko','Hips Don\'t Lie|Shakira','Shake It Off|Taylor Swift'
+    ]
+  },
+  dinner: {
+    label: 'Dinner & Lounge', emoji: '🍷',
+    blurb: 'Soul, R&B, bossa nova and smooth background grooves',
+    keywords: /dinner|lounge|chill|supper|wine|cocktails|date night|background/i,
+    queries: ['genre:"neo soul"', 'genre:"bossa nova"', 'genre:"indie soul"', 'genre:"vocal jazz"', 'genre:"quiet storm"'],
+    seeds: [
+      'Redbone|Childish Gambino','Electric Feel|MGMT','Sunday Morning|Maroon 5','Put Your Records On|Corinne Bailey Rae','Come Away With Me|Norah Jones',
+      'Don\'t Know Why|Norah Jones','Golden|Harry Styles','Adorn|Miguel','Best Part|Daniel Caesar','Get You|Daniel Caesar','Location|Khalid',
+      'Thinkin Bout You|Frank Ocean','Pink + White|Frank Ocean','Sweet Love|Anita Baker','Smooth Operator|Sade','By Your Side|Sade','Kiss of Life|Sade',
+      'The Girl From Ipanema|Stan Getz','Mas Que Nada|Sergio Mendes','Feeling Good|Nina Simone','Fly Me To The Moon|Frank Sinatra',
+      'Valerie|Amy Winehouse','Back To Black|Amy Winehouse','Lovely Day|Bill Withers','Ain\'t No Sunshine|Bill Withers','Let\'s Stay Together|Al Green',
+      'Tadow|Masego','Leave the Door Open|Silk Sonic','BIRDS OF A FEATHER|Billie Eilish','Snooze|SZA','Good Days|SZA','Cherry Wine|Hozier',
+      'Dreams|Fleetwood Mac','Banana Pancakes|Jack Johnson','Gravity|John Mayer','Slow Dancing in a Burning Room|John Mayer','Pink Moon|Nick Drake',
+      'Sea of Love|Cat Power','Untitled (How Does It Feel)|D\'Angelo','Lady|D\'Angelo'
+    ]
+  },
+  throwback: {
+    label: 'Throwback (70s–00s)', emoji: '📼',
+    blurb: 'Disco, 80s, 90s and 00s sing-along classics',
+    keywords: /throwback|70s|80s|90s|00s|retro|disco|reunion|decade/i,
+    queries: ['genre:disco year:1975-1982', 'genre:"new wave" year:1980-1989', 'genre:"dance pop" year:1995-2006', 'genre:"r&b" year:1990-2005', 'genre:"classic rock" year:1975-1989'],
+    seeds: [
+      'September|Earth, Wind & Fire','Dancing Queen|ABBA','Billie Jean|Michael Jackson','Don\'t Stop Believin\'|Journey','Livin\' On A Prayer|Bon Jovi',
+      'Girls Just Want to Have Fun|Cyndi Lauper','Take on Me|a-ha','Africa|TOTO','Sweet Dreams (Are Made of This)|Eurythmics',
+      'Come On Eileen|Dexys Midnight Runners','Jump|Van Halen','Like a Prayer|Madonna','Into the Groove|Madonna','Wake Me Up Before You Go-Go|Wham!',
+      'Footloose|Kenny Loggins','I Wanna Dance with Somebody|Whitney Houston','Le Freak|CHIC','Stayin\' Alive|Bee Gees','Y.M.C.A.|Village People',
+      'I Will Survive|Gloria Gaynor','Wannabe|Spice Girls','...Baby One More Time|Britney Spears','No Scrubs|TLC','Waterfalls|TLC',
+      'Gonna Make You Sweat (Everybody Dance Now)|C+C Music Factory','Rhythm Is A Dancer|SNAP!','Hey Ya!|OutKast','Crazy in Love|Beyoncé',
+      'Since U Been Gone|Kelly Clarkson','Hollaback Girl|Gwen Stefani','Mr. Brightside|The Killers','Bye Bye Bye|*NSYNC',
+      'Everybody (Backstreet\'s Back)|Backstreet Boys','Ice Ice Baby|Vanilla Ice','U Can\'t Touch This|MC Hammer','Jump Around|House Of Pain',
+      'Poison|Bell Biv DeVoe','Return of the Mack|Mark Morrison','Livin\' la Vida Loca|Ricky Martin','Macarena|Los Del Rio',
+      'Total Eclipse of the Heart|Bonnie Tyler','Don\'t You (Forget About Me)|Simple Minds','Kiss|Prince','Let\'s Go Crazy|Prince',
+      'Super Freak|Rick James','Thriller|Michael Jackson','Hot In Herre|Nelly','Get Ur Freak On|Missy Elliott','This Is How We Do It|Montell Jordan'
+    ]
+  },
+  custom: {
+    label: 'Custom vibe', emoji: '✨',
+    blurb: 'Type a genre, mood or artist and we\'ll search for it',
+    keywords: null, queries: [], seeds: []
+  }
+};
+
+/* ========================= utilities ========================= */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const fmt = ms => { const s = Math.round(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+const fmtLong = ms => { const m = Math.round(ms / 60000); const h = Math.floor(m / 60); return h ? `${h}h ${String(m % 60).padStart(2,'0')}m` : `${m}m`; };
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} }
+};
+let toastT;
+function toast(msg, ms = 2800) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), ms); }
+
+const CLIP_MS = 15000;          // length of each song bite
+const AVG_SONG_MS = 210000;     // 3.5 min, used for estimates only
+const REDIRECT_URI = location.origin + location.pathname;
+const SCOPES = 'streaming user-read-email user-read-private user-read-playback-state user-modify-playback-state playlist-modify-private playlist-modify-public';
+
+/* ========================= state ========================= */
+const freshState = () => ({ stage: 'title', title: '', hours: 3, event: '', custom: '', picks: [], seen: [], history: [] });
+let state = Object.assign(freshState(), LS.get('pc_state', {}));
+const save = () => LS.set('pc_state', state);
+const targetMs = () => state.hours * 3600000;
+const pickedMs = () => state.picks.reduce((a, t) => a + t.dur, 0);
+
+/* ========================= Spotify auth (PKCE) ========================= */
+const clientId = () => LS.get('pc_client_id', '');
+const randStr = n => { const c = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'; return Array.from(crypto.getRandomValues(new Uint8Array(n)), x => c[x % c.length]).join(''); };
+const b64url = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+async function login() {
+  const id = $('#clientId').value.trim();
+  if (!id) return toast('Paste your Spotify Client ID first');
+  LS.set('pc_client_id', id);
+  const verifier = randStr(64);
+  LS.set('pc_verifier', verifier);
+  const challenge = b64url(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)));
+  const p = new URLSearchParams({ client_id: id, response_type: 'code', redirect_uri: REDIRECT_URI, scope: SCOPES, code_challenge_method: 'S256', code_challenge: challenge });
+  location.href = 'https://accounts.spotify.com/authorize?' + p;
+}
+async function tokenRequest(params) {
+  const r = await fetch('https://accounts.spotify.com/api/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(params) });
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error_description || j.error || 'Token error');
+  const tok = { access: j.access_token, refresh: j.refresh_token || LS.get('pc_token', {}).refresh, exp: Date.now() + (j.expires_in - 60) * 1000 };
+  LS.set('pc_token', tok);
+  return tok;
+}
+async function handleRedirect() {
+  const p = new URLSearchParams(location.search);
+  if (!p.get('code') && !p.get('error')) return;
+  history.replaceState(null, '', REDIRECT_URI);
+  if (p.get('error')) return toast('Spotify login was cancelled');
+  await tokenRequest({ grant_type: 'authorization_code', code: p.get('code'), redirect_uri: REDIRECT_URI, client_id: clientId(), code_verifier: LS.get('pc_verifier', '') });
+  LS.del('pc_verifier');
+}
+async function getToken() {
+  let t = LS.get('pc_token', null);
+  if (!t) throw new Error('Not logged in');
+  if (Date.now() > t.exp) t = await tokenRequest({ grant_type: 'refresh_token', refresh_token: t.refresh, client_id: clientId() });
+  return t.access;
+}
+async function api(path, opts = {}, tries = 0) {
+  const r = await fetch('https://api.spotify.com/v1' + path, {
+    ...opts, headers: { Authorization: 'Bearer ' + await getToken(), ...(opts.body ? { 'Content-Type': 'application/json' } : {}) }
+  });
+  if (r.status === 429 && tries < 3) {
+    const wait = +r.headers.get('Retry-After') || 2;
+    if (wait > 30) throw Object.assign(new Error('Spotify rate limit reached — try again later'), { status: 429 });
+    await sleep(wait * 1000); return api(path, opts, tries + 1);
+  }
+  if (r.status === 401 && tries < 1) { const t = LS.get('pc_token', null); if (t) { t.exp = 0; LS.set('pc_token', t); } return api(path, opts, tries + 1); }
+  if (r.status === 204 || r.status === 202) return null;
+  const txt = await r.text(); let j = null; try { j = txt ? JSON.parse(txt) : null; } catch {}
+  if (!r.ok) throw Object.assign(new Error(j?.error?.message || ('Spotify error ' + r.status)), { status: r.status });
+  return j;
+}
+
+/* ========================= song pool ========================= */
+const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\(.*?\)|\[.*?\]/g, '').replace(/ - .*$/, '').replace(/[^a-z0-9]/g, '');
+const key = (name, artist) => norm(name) + '::' + norm(artist);
+const JUNK = /karaoke|tribute|made famous|in the style of|instrumental|8[- ]?bit|lullaby|music box|piano version|workout|sped up|slowed|nightcore|originally performed/i;
+let buffer = [], seedQueue = [], queryQueue = [], filling = null, seenSet = new Set(), poolKey = '';
+
+function buildPool() {
+  const ev = EVENTS[state.event];
+  seenSet = new Set(state.seen);
+  state.picks.forEach(t => { seenSet.add(t.id); seenSet.add(key(t.name, t.artist0)); });
+  seedQueue = shuffle(ev.seeds.map(s => s.split('|'))).filter(([t, a]) => !seenSet.has(key(t, a)));
+  const qs = state.event === 'custom'
+    ? [state.custom, `${state.custom} year:2010-2026`, `${state.custom} year:1970-2009`, `genre:"${state.custom}"`]
+    : ev.queries;
+  queryQueue = qs.map(q => ({ q, offset: 0 }));
+  buffer = [];
+  poolKey = state.event + '|' + state.custom;
+}
+function simplify(t) {
+  return { id: t.id, uri: t.uri, name: t.name, artists: t.artists.map(a => a.name).join(', '), artist0: t.artists[0]?.name || '',
+           album: t.album?.name || '', image: (t.album?.images || [])[0]?.url || '', dur: t.duration_ms,
+           url: t.external_urls?.spotify || `https://open.spotify.com/track/${t.id}` };
+}
+function accept(t) {
+  if (!t || !t.id || t.is_playable === false) return false;
+  if (JUNK.test(t.name) || JUNK.test(t.album?.name || '')) return false;
+  const k = key(t.name, t.artists[0]?.name);
+  if (seenSet.has(t.id) || seenSet.has(k)) return false;
+  if (buffer.some(b => b.id === t.id || key(b.name, b.artist0) === k)) return false;
+  buffer.push(simplify(t));
+  return true;
+}
+const poolExhausted = () => !seedQueue.length && !queryQueue.length && !buffer.length;
+function fillBuffer(min = 5) {
+  if (filling) return filling;
+  const run = async () => {
+    try {
+      while (buffer.length < min && (seedQueue.length || queryQueue.length)) {
+        // Mostly curated picks (best fit for the event), with some search variety mixed in
+        if (seedQueue.length && (!queryQueue.length || Math.random() < 0.8)) {
+          const [title, artist] = seedQueue.shift();
+          const j = await api(`/search?type=track&market=from_token&limit=5&q=${encodeURIComponent(title + ' ' + artist)}`);
+          const items = j?.tracks?.items || [];
+          const a = norm(artist), tt = norm(title);
+          const hit = items.find(t => t.artists.some(x => norm(x.name) === a) && norm(t.name).startsWith(tt.slice(0, 6)))
+                   || items.find(t => t.artists.some(x => { const n = norm(x.name); return n && (n.includes(a) || a.includes(n)); }) && norm(t.name).includes(tt.slice(0, 4)));
+          accept(hit);
+        } else {
+          const q = queryQueue.shift();
+          const j = await api(`/search?type=track&market=from_token&limit=10&offset=${q.offset}&q=${encodeURIComponent(q.q)}`);
+          const items = j?.tracks?.items || [];
+          shuffle(items).forEach(accept);
+          q.offset += 10;
+          if (items.length === 10 && q.offset < 300) queryQueue.push(q); // rotate for variety
+        }
+      }
+    } catch (e) { console.warn(e); toast(e.message); }
+  };
+  // .finally always runs after this assignment, so the busy flag can never get stuck
+  filling = run().finally(() => { filling = null; });
+  return filling;
+}
+
+/* ========================= playback ========================= */
+// Computers: clips play in this tab through Spotify's Web Playback SDK.
+// iPhone/iPad/Android: that SDK doesn't run in mobile browsers, so clips play
+// through the Spotify app on the phone (Spotify Connect), controlled from here.
+const IS_MOBILE = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+let player = null, deviceId = null, playbackMode = IS_MOBILE ? 'connect' : 'sdk', sdkReady = false, sdkWaiters = [];
+let connectDevice = null, waitingForDevice = false, pendingPause = Promise.resolve();
+let clipTimer = null, rafId = null, clipStart = 0, playSeq = 0, hookPos = 0, playing = false;
+window.onSpotifyWebPlaybackSDKReady = () => { sdkReady = true; sdkWaiters.splice(0).forEach(f => f()); };
+const waitSdk = () => sdkReady ? Promise.resolve() : new Promise(r => sdkWaiters.push(r));
+
+let playerInit = null;
+function initPlayer() {
+  if (playerInit) return playerInit;
+  if (playbackMode !== 'sdk') return (playerInit = Promise.resolve());
+  playerInit = (async () => {
+    await Promise.race([waitSdk(), sleep(8000)]);
+    if (!window.Spotify) { playbackMode = 'embed'; return; }
+    player = new Spotify.Player({ name: 'Playlist Curator', getOAuthToken: cb => getToken().then(cb).catch(() => {}), volume: 0.8 });
+    const ready = new Promise(res => {
+      player.addListener('ready', ({ device_id }) => { deviceId = device_id; res(true); });
+      ['initialization_error', 'authentication_error', 'account_error'].forEach(ev =>
+        player.addListener(ev, ({ message }) => { console.warn(ev, message); playbackMode = 'embed'; res(false); }));
+    });
+    player.addListener('not_ready', () => { deviceId = null; });
+    await player.connect();
+    await Promise.race([ready, sleep(10000)]);
+    if (!deviceId) playbackMode = 'embed';
+  })();
+  return playerInit;
+}
+async function findDevice() {
+  const j = await api('/me/player/devices');
+  const ds = (j?.devices || []).filter(d => !d.is_restricted);
+  const d = ds.find(d => d.is_active) || ds.find(d => d.type === 'Smartphone') || ds[0] || null;
+  connectDevice = d ? { id: d.id, name: d.name } : null;
+  return connectDevice;
+}
+const activeDeviceId = () => playbackMode === 'connect' ? connectDevice?.id : deviceId;
+function hookStart(t) {
+  // Spotify no longer exposes song sections, so estimate the first chorus:
+  // ~30% into the track, but never before 0:30 and always leaving room for the clip.
+  let p = Math.max(t.dur * 0.3, 30000);
+  p = Math.min(p, t.dur - CLIP_MS - 3000);
+  return Math.max(0, Math.round(p));
+}
+function setPlaying(on) {
+  playing = on;
+  const b = $('#playBtn'); if (b) b.textContent = on ? '❚❚' : '▶';
+  if (!on) setRing(0);
+}
+function setRing(frac) {
+  const c = $('#ringFg'); if (!c) return;
+  const L = 2 * Math.PI * 26; c.style.strokeDasharray = L; c.style.strokeDashoffset = L * (1 - frac);
+}
+function tick() {
+  const f = Math.min(1, (performance.now() - clipStart) / CLIP_MS);
+  setRing(f);
+  if (f < 1 && playing) rafId = requestAnimationFrame(tick);
+}
+function stopClip(pause = true) {
+  playSeq++;
+  clearTimeout(clipTimer); cancelAnimationFrame(rafId);
+  if (pause && playing) {
+    if (playbackMode === 'sdk' && player && deviceId) player.pause().catch(() => {});
+    else if (playbackMode === 'connect' && connectDevice)
+      pendingPause = api(`/me/player/pause?device_id=${connectDevice.id}`, { method: 'PUT' }).catch(() => {});
+  }
+  setPlaying(false);
+}
+async function startPlayback(t, seq) {
+  await pendingPause; // make sure a pause for the previous song lands before the next play
+  if (seq !== playSeq) return;
+  await api(`/me/player/play?device_id=${activeDeviceId()}`, { method: 'PUT', body: JSON.stringify({ uris: [t.uri], position_ms: hookPos }) });
+  if (seq !== playSeq) return;
+  clipStart = performance.now(); setPlaying(true); tick();
+  clipTimer = setTimeout(() => { if (seq === playSeq) stopClip(); }, CLIP_MS);
+}
+async function playClip(t, pos) {
+  stopClip(false);
+  const seq = ++playSeq;
+  await initPlayer();
+  if (seq !== playSeq) return;
+  hookPos = Math.max(0, Math.min(pos ?? hookStart(t), t.dur - 5000));
+  if (playbackMode === 'embed' || (playbackMode === 'sdk' && !deviceId)) return showEmbed(t);
+  if (playbackMode === 'connect' && !connectDevice) {
+    try { await findDevice(); } catch (e) { console.warn(e); }
+    if (seq !== playSeq) return;
+    if (!connectDevice) return showNoDevice(t);
+  }
+  const lbl = $('#hookLbl');
+  if (lbl) lbl.textContent = `Playing 0:15 from ${fmt(hookPos)}` + (playbackMode === 'connect' ? ` · on ${connectDevice.name}` : '');
+  try {
+    await startPlayback(t, seq);
+  } catch (e) {
+    console.warn(e);
+    if (playbackMode === 'connect' && e.status !== 403) {
+      // The phone's Spotify app went to sleep or changed — look for it again once.
+      connectDevice = null;
+      try { await findDevice(); if (connectDevice && seq === playSeq) return await startPlayback(t, seq); } catch {}
+      if (seq === playSeq) showNoDevice(t);
+    } else if (e.status === 403 || e.status === 404) {
+      playbackMode = 'embed'; toast('Spotify won\'t play clips here — switching to its preview player'); showEmbed(t);
+    } else toast('Couldn\'t play clip: ' + e.message);
+  }
+}
+function showEmbed(t) {
+  const p = document.querySelector('.card .player, .card .nodev'); if (!p) return;
+  const lbl = $('#hookLbl'); if (lbl) lbl.remove();
+  p.outerHTML = `<div class="embed"><iframe src="https://open.spotify.com/embed/track/${t.id}?theme=0" allow="autoplay; clipboard-write; encrypted-media" loading="lazy"></iframe></div>`;
+}
+function showNoDevice(t) {
+  waitingForDevice = true;
+  const p = document.querySelector('.card .player'); if (!p) return;
+  const lbl = $('#hookLbl'); if (lbl) lbl.textContent = '';
+  p.outerHTML = `<div class="nodev">
+      <p><b>Open Spotify to hear clips.</b> Play any song for a second, then come back here.</p>
+      <div class="nodevBtns"><a class="btn primary" href="spotify:">Open Spotify</a><button class="btn ghost" id="retryDev">I'm back ▶</button></div>
+      <button class="linkbtn" id="usePreview">Use Spotify's previews instead</button>
+    </div>`;
+  const retry = () => { waitingForDevice = false; renderCard(t); playClip(t); };
+  $('#retryDev').onclick = retry;
+  $('#usePreview').onclick = () => { playbackMode = 'embed'; retry(); };
+}
+// Coming back from the Spotify app: try again automatically.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && waitingForDevice && current) { waitingForDevice = false; renderCard(current); playClip(current); }
+});
+
+/* ========================= swipe ========================= */
+let current = null, busy = false;
+function updateProgress() {
+  const ms = pickedMs(), tgt = targetMs();
+  const n = state.picks.length;
+  const est = Math.ceil(tgt / (n >= 5 ? ms / n : AVG_SONG_MS));
+  $('#swTitle').textContent = state.title;
+  $('#swCount').textContent = `${n} picked`;
+  $('#swBar').style.width = Math.min(100, ms / tgt * 100) + '%';
+  $('#swTime').textContent = `${fmtLong(ms)} of ${fmtLong(tgt)}`;
+  $('#swLeft').textContent = ms >= tgt ? 'Target reached 🎉' : `~${Math.max(1, est - n)} more songs`;
+}
+function deckMessage(html) { $('#deck').innerHTML = `<div class="center"><div>${html}</div></div>`; }
+
+async function nextCard() {
+  current = null;
+  if (!buffer.length) {
+    deckMessage('<div class="spin"></div>Finding songs…');
+    await fillBuffer(5);
+  }
+  if (!buffer.length) {
+    if (poolExhausted()) { stopClip(); toast('That\'s every song in this mix — review your picks'); return go('review'); }
+    return deckMessage('Couldn\'t load songs.<br><br><button class="btn ghost" onclick="nextCard()">Try again</button>');
+  }
+  current = buffer.shift();
+  renderCard(current);
+  playClip(current);
+  fillBuffer(5);
+}
+function renderCard(t) {
+  const deck = $('#deck');
+  deck.innerHTML = `
+    <div class="card">
+      <div class="art" style="background-image:url('${esc(t.image)}')">
+        <div class="stamp like">ADD</div><div class="stamp nope">PASS</div>
+      </div>
+      <div class="meta"><h3>${esc(t.name)}</h3><p>${esc(t.artists)}</p><p class="sub">${esc(t.album)} · ${fmt(t.dur)}</p></div>
+      <div class="player">
+        <button class="pbtn" id="backBtn" title="Back 10s">−10</button>
+        <div class="ring"><svg viewBox="0 0 60 60"><circle class="bg" cx="30" cy="30" r="26"/><circle class="fg" id="ringFg" cx="30" cy="30" r="26"/></svg>
+          <button id="playBtn" title="Play / stop (space)">▶</button></div>
+        <button class="pbtn" id="fwdBtn" title="Forward 10s">+10</button>
+      </div>
+      <div class="hookLbl" id="hookLbl"></div>
+    </div>`;
+  setRing(0);
+  $('#playBtn').onclick = () => playing ? stopClip() : playClip(t, hookPos);
+  $('#backBtn').onclick = () => playClip(t, hookPos - 10000);
+  $('#fwdBtn').onclick = () => playClip(t, hookPos + 10000);
+  attachDrag(deck.querySelector('.card'));
+}
+function attachDrag(c) {
+  let sx = 0, sy = 0, dx = 0, dragging = false;
+  const like = c.querySelector('.like'), nope = c.querySelector('.nope');
+  c.addEventListener('pointerdown', e => {
+    if (e.target.closest('button,iframe,a,.nodev')) return;
+    dragging = true; sx = e.clientX; sy = e.clientY; dx = 0;
+    c.setPointerCapture(e.pointerId); c.style.transition = 'none';
+  });
+  c.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    dx = e.clientX - sx; const dy = e.clientY - sy;
+    c.style.transform = `translate(${dx}px,${dy * 0.25}px) rotate(${dx / 18}deg)`;
+    like.style.opacity = Math.max(0, Math.min(1, dx / 100));
+    nope.style.opacity = Math.max(0, Math.min(1, -dx / 100));
+  });
+  const end = () => {
+    if (!dragging) return; dragging = false; c.style.transition = '';
+    if (dx > 110) decide('add'); else if (dx < -110) decide('pass');
+    else { c.style.transform = ''; like.style.opacity = 0; nope.style.opacity = 0; }
+  };
+  c.addEventListener('pointerup', end); c.addEventListener('pointercancel', end);
+}
+async function decide(action) {
+  if (!current || busy) return;
+  busy = true;
+  const t = current, dir = action === 'add' ? 1 : -1;
+  const c = document.querySelector('#deck .card');
+  if (c) {
+    c.querySelector(action === 'add' ? '.like' : '.nope').style.opacity = 1;
+    c.style.transform = `translate(${dir * 650}px,-30px) rotate(${dir * 28}deg)`; c.style.opacity = 0;
+  }
+  stopClip();
+  seenSet.add(t.id); seenSet.add(key(t.name, t.artist0));
+  state.seen.push(t.id, key(t.name, t.artist0));
+  if (action === 'add') state.picks.push(t);
+  state.history.push({ action, track: t });
+  if (state.history.length > 50) state.history.shift();
+  save(); updateProgress();
+  await sleep(240);
+  busy = false;
+  if (action === 'add' && pickedMs() >= targetMs()) {
+    toast(`🎉 That's ${fmtLong(pickedMs())} of music — playlist complete!`, 3500);
+    return go('review');
+  }
+  nextCard();
+}
+function undo() {
+  const h = state.history.pop();
+  if (!h || busy) return toast('Nothing to undo');
+  if (h.action === 'add') state.picks = state.picks.filter(p => p.id !== h.track.id);
+  if (current) buffer.unshift(current);
+  buffer.unshift(h.track);
+  save(); updateProgress(); stopClip();
+  toast(h.action === 'add' ? 'Removed — swipe it again' : 'Brought it back');
+  nextCard();
+}
+
+/* ========================= review & export ========================= */
+function renderReview() {
+  const ms = pickedMs();
+  $('#rvTitle').textContent = state.title;
+  $('#rvSongs').textContent = state.picks.length;
+  $('#rvLen').textContent = fmtLong(ms);
+  $('#rvPct').textContent = Math.round(ms / targetMs() * 100) + '%';
+  $('#btnMore').textContent = ms >= targetMs() ? 'Add more songs' : 'Keep swiping';
+  $('#rvList').innerHTML = state.picks.length ? state.picks.map((t, i) => `
+    <li><span class="n">${i + 1}</span><img src="${esc(t.image)}" alt="">
+      <div class="t"><b>${esc(t.name)}</b><span>${esc(t.artists)}</span></div>
+      <span class="d">${fmt(t.dur)}</span><button class="rm" data-rm="${esc(t.id)}" title="Remove">✕</button></li>`).join('')
+    : '<li style="color:var(--muted)">No songs yet — keep swiping!</li>';
+  $('#btnSave').disabled = $('#btnXlsx').disabled = !state.picks.length;
+}
+const safeName = () => (state.title || 'playlist').replace(/[\\/:*?"<>|]+/g, '').trim().slice(0, 80) || 'playlist';
+function exportExcel() {
+  const rows = state.picks.map((t, i) => ({ '#': i + 1, Title: t.name, Artist: t.artists, Album: t.album, Duration: fmt(t.dur), 'Spotify Link': t.url }));
+  if (!window.XLSX) {
+    const csv = [Object.keys(rows[0]).join(',')].concat(rows.map(r => Object.values(r).map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))).join('\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = safeName() + '.csv'; a.click();
+    return toast('Excel library unavailable offline — saved as CSV (opens in Excel)');
+  }
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [{ wch: 4 }, { wch: 38 }, { wch: 30 }, { wch: 30 }, { wch: 9 }, { wch: 48 }];
+  rows.forEach((r, i) => { const ref = XLSX.utils.encode_cell({ r: i + 1, c: 5 }); if (ws[ref]) ws[ref].l = { Target: r['Spotify Link'] }; });
+  const info = XLSX.utils.aoa_to_sheet([
+    ['Playlist', state.title], ['Event', EVENTS[state.event]?.label + (state.event === 'custom' ? ` (${state.custom})` : '')],
+    ['Target length', `${state.hours} hours`], ['Songs', state.picks.length], ['Total length', fmtLong(pickedMs())],
+    ['Created', new Date().toLocaleString()]
+  ]);
+  info['!cols'] = [{ wch: 16 }, { wch: 44 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Playlist');
+  XLSX.utils.book_append_sheet(wb, info, 'Details');
+  const fname = safeName() + '.xlsx';
+  if (IS_MOBILE && navigator.canShare) {
+    // On phones, open the share sheet so it can go to Files, Mail, Messages, etc.
+    const data = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const file = new File([data], fname, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    if (navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: state.title }).catch(e => { if (e.name !== 'AbortError') XLSX.writeFile(wb, fname); });
+      return;
+    }
+  }
+  XLSX.writeFile(wb, fname);
+}
+async function saveToSpotify() {
+  const b = $('#btnSave'); b.disabled = true; b.textContent = 'Saving…';
+  try {
+    const ev = EVENTS[state.event];
+    const pl = await api('/me/playlists', { method: 'POST', body: JSON.stringify({
+      name: state.title, public: false,
+      description: `${ev.label} playlist · ${state.picks.length} songs · ${fmtLong(pickedMs())}. Curated with Playlist Curator.` }) });
+    const uris = state.picks.map(t => t.uri);
+    for (let i = 0; i < uris.length; i += 100)
+      await api(`/playlists/${pl.id}/items`, { method: 'POST', body: JSON.stringify({ uris: uris.slice(i, i + 100) }) });
+    const s = $('#saved'); s.style.display = 'block';
+    s.innerHTML = `✅ Saved to your Spotify library as a private playlist. <a href="${esc(pl.external_urls?.spotify || '#')}" target="_blank" rel="noopener">Open in Spotify →</a>`;
+    b.textContent = 'Saved ✓';
+  } catch (e) { toast('Save failed: ' + e.message, 4000); b.disabled = false; b.textContent = 'Save to Spotify'; }
+}
+
+/* ========================= navigation & wiring ========================= */
+function go(stage, persist = true) {
+  if (stage !== 'swipe') stopClip();
+  $$('.screen').forEach(s => s.classList.toggle('on', s.id === 's-' + stage));
+  if (persist && stage !== 'connect') { state.stage = stage; save(); }
+  window.scrollTo(0, 0);
+  if (stage === 'title') { $('#title').value = state.title; $('#btnTitleNext').disabled = !state.title.trim(); setTimeout(() => $('#title').focus(), 50); }
+  if (stage === 'duration') setHours(state.hours);
+  if (stage === 'event') renderEvents();
+  if (stage === 'review') renderReview();
+  if (stage === 'swipe') {
+    updateProgress();
+    if (poolKey !== state.event + '|' + state.custom) buildPool();
+    if (current) renderCard(current);
+    else deckMessage('<button class="btn primary" id="btnResume">▶ Start swiping</button><p class="hint">Each song plays a 15-second bite.</p>');
+    const r = $('#btnResume'); if (r) r.onclick = () => { player?.activateElement?.(); nextCard(); };
+  }
+}
+function setHours(h) {
+  state.hours = +h; save();
+  $('#hours').value = h; $('#hoursVal').textContent = (+h % 1 ? (+h).toFixed(1) : +h);
+  $('#songsEst').textContent = `≈ ${Math.round(h * 3600000 / AVG_SONG_MS)} songs to pick`;
+  $$('#hourChips .chip').forEach(c => c.classList.toggle('on', +c.dataset.h === +h));
+}
+function suggestedEvent() {
+  for (const [k, ev] of Object.entries(EVENTS)) if (ev.keywords && ev.keywords.test(state.title)) return k;
+  return '';
+}
+function renderEvents() {
+  const sug = suggestedEvent();
+  if (!state.event && sug) { state.event = sug; save(); }
+  $('#events').innerHTML = Object.entries(EVENTS).map(([k, ev]) => `
+    <button class="ev ${state.event === k ? 'on' : ''}" data-ev="${k}">
+      <div class="e">${ev.emoji}</div>${k === sug ? '<div class="sug">Suggested</div>' : ''}<b>${ev.label}</b><span>${ev.blurb}</span>
+    </button>`).join('');
+  $('#customWrap').style.display = state.event === 'custom' ? 'block' : 'none';
+  $('#custom').value = state.custom;
+  $('#btnStart').disabled = !state.event || (state.event === 'custom' && !state.custom.trim());
+}
+
+$('#btnLogin').onclick = login;
+$('#clientId').addEventListener('keydown', e => e.key === 'Enter' && login());
+$('#btnLogout').onclick = () => { LS.del('pc_token'); player?.disconnect(); location.reload(); };
+$('#title').addEventListener('input', e => { state.title = e.target.value; save(); $('#btnTitleNext').disabled = !state.title.trim(); });
+$('#title').addEventListener('keydown', e => { if (e.key === 'Enter' && state.title.trim()) go('duration'); });
+$('#btnTitleNext').onclick = () => go('duration');
+$('#hours').addEventListener('input', e => setHours(e.target.value));
+$('#hourChips').innerHTML = [1, 2, 3, 4, 5, 6].map(h => `<button class="chip" data-h="${h}">${h} hr</button>`).join('');
+$('#hourChips').addEventListener('click', e => { const c = e.target.closest('.chip'); if (c) setHours(c.dataset.h); });
+$('#btnDurNext').onclick = () => go('event');
+$('#events').addEventListener('click', e => { const b = e.target.closest('.ev'); if (!b) return; state.event = b.dataset.ev; save(); renderEvents(); if (state.event === 'custom') $('#custom').focus(); });
+$('#custom').addEventListener('input', e => { state.custom = e.target.value.trim(); save(); $('#btnStart').disabled = !state.custom; });
+$('#btnStart').onclick = () => { player?.activateElement?.(); current = null; go('swipe'); nextCard(); };
+$$('[data-go]').forEach(b => b.onclick = () => go(b.dataset.go));
+$('#btnYes').onclick = () => decide('add');
+$('#btnNo').onclick = () => decide('pass');
+$('#btnUndo').onclick = undo;
+$('#btnDone').onclick = () => go('review');
+$('#rvList').addEventListener('click', e => {
+  const b = e.target.closest('[data-rm]'); if (!b) return;
+  state.picks = state.picks.filter(t => t.id !== b.dataset.rm); save(); renderReview();
+});
+$('#btnXlsx').onclick = exportExcel;
+$('#btnSave').onclick = saveToSpotify;
+$('#btnMore').onclick = () => { $('#saved').style.display = 'none'; $('#btnSave').textContent = 'Save to Spotify'; go('swipe'); };
+$('#btnRestart').onclick = () => {
+  if (state.picks.length && !confirm('Start a new playlist? Your current picks will be cleared (export them first if you need them).')) return;
+  state = freshState(); save(); buffer = []; poolKey = ''; current = null; $('#saved').style.display = 'none'; $('#btnSave').textContent = 'Save to Spotify'; go('title');
+};
+document.addEventListener('keydown', e => {
+  if (!$('#s-swipe').classList.contains('on') || e.target.matches('input')) return;
+  if (e.key === 'ArrowRight') decide('add');
+  else if (e.key === 'ArrowLeft') decide('pass');
+  else if (e.key === ' ') { e.preventDefault(); if (current) playing ? stopClip() : playClip(current, hookPos); }
+  else if (e.key.toLowerCase() === 'z' || e.key === 'Backspace') undo();
+});
+
+/* ========================= boot ========================= */
+(async () => {
+  if (IS_MOBILE) document.body.classList.add('touch');
+  $('#redirectUri').textContent = REDIRECT_URI;
+  $('#clientId').value = clientId();
+  if (location.protocol === 'file:') {
+    $('#envWarn').innerHTML = '<div class="warn">This page is opened as a file. Spotify login needs it served locally — see the README (run <code>python3 -m http.server 8888 --bind 127.0.0.1</code> and open http://127.0.0.1:8888/).</div>';
+  } else if (location.protocol === 'http:' && !['127.0.0.1', '[::1]', 'localhost'].includes(location.hostname)) {
+    $('#envWarn').innerHTML = `<div class="warn">Spotify only allows secure (https://) addresses. Open this page with https:// or use a host that provides it.</div>`;
+  } else if (location.hostname === 'localhost') {
+    const alt = location.href.replace('//localhost', '//127.0.0.1');
+    $('#envWarn').innerHTML = `<div class="warn">Spotify doesn't accept "localhost" redirect URIs. Open <a href="${esc(alt)}" style="color:#ffd79a">${esc(alt)}</a> instead.</div>`;
+  }
+  try { await handleRedirect(); } catch (e) { toast('Login failed: ' + e.message, 4000); }
+  if (!LS.get('pc_token', null)) return go('connect', false);
+  try {
+    const me = await api('/me');
+    $('#who').textContent = me.display_name || me.id; $('#whoWrap').hidden = false;
+  } catch (e) {
+    LS.del('pc_token'); toast('Please reconnect Spotify (' + e.message + ')', 4000); return go('connect', false);
+  }
+  initPlayer();
+  const valid = ['title', 'duration', 'event', 'swipe', 'review'];
+  let stage = valid.includes(state.stage) ? state.stage : 'title';
+  if (stage === 'swipe' && !state.event) stage = 'event';
+  go(stage);
+})();
+</script>
+<script src="https://sdk.scdn.co/spotify-player.js"></script>
+</body>
+</html>
