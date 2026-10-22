@@ -99,6 +99,37 @@ body.touch .keys{display:none}
 .plMeta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px}
 .plMeta .sp{color:var(--green)}
 .empty{color:var(--muted);text-align:center;padding:28px 0}
+.sec{font-size:15px;margin:22px 0 10px;display:flex;align-items:baseline;gap:8px}
+.sec span{font-size:12px;color:var(--muted);font-weight:500}
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+.tag{padding:8px 13px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:14px}
+.tag.on{background:#1ed76020;border-color:var(--green);color:var(--green);font-weight:600}
+.tag.x{background:#ff4f7b1c;border-color:var(--pink);color:var(--pink);font-weight:600;text-decoration:line-through}
+.tgl{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:14px;color:#d6d6e0}
+.tgl input{width:20px;height:20px;accent-color:var(--green)}
+.srcs{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.src{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px}
+.src b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.src span{color:var(--muted);font-size:12px}
+.src button{color:var(--muted);width:28px;height:28px;border-radius:50%}
+.sheet{position:fixed;inset:0;background:#000a;z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet[hidden]{display:none}
+.sheetIn{width:100%;max-width:520px;max-height:85vh;max-height:85dvh;background:var(--panel);border:1px solid var(--line);border-radius:20px 20px 0 0;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
+.sheetHd{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid var(--line)}
+.sheetHd button{width:32px;height:32px;border-radius:50%;color:var(--muted)}
+#sheetBody{overflow:auto;padding:8px 10px;flex:1}
+.pick{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 8px;border-radius:12px}
+.pick:hover{background:var(--panel2)}
+.pick img,.pick .ph{width:44px;height:44px;border-radius:6px;object-fit:cover;background:#2a2a38;flex:none}
+.pick .t{flex:1;min-width:0}
+.pick .t b,.pick .t span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pick .t span{font-size:12.5px;color:var(--muted)}
+.pick[disabled]{opacity:.4;pointer-events:none}
+.sheetNote{font-size:12.5px;color:var(--muted);padding:10px 8px 4px}
+.sheetFt{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--line)}
+.sheetFt .text{font-size:15px;padding:11px 12px}
+.sheetFt .btn{padding:11px 16px}
+.tool.icon{flex:0 0 42px;padding:9px 0}
 @media (max-width:480px){
   #app{padding:12px 14px calc(24px + env(safe-area-inset-bottom))}
   header{margin-bottom:12px}
@@ -201,7 +232,7 @@ ul.tracks .rm:hover{background:var(--panel2);color:var(--pink)}
   <!-- TITLE -->
   <section class="screen" id="s-title">
     <button class="back" data-go="home">← My playlists</button>
-    <div class="step">Step 1 of 3</div>
+    <div class="step">Step 1 of 4</div>
     <h1>Name your playlist</h1>
     <p class="lead">We'll use it on Spotify and in your Excel export.</p>
     <input class="text" id="title" maxlength="100" placeholder="e.g. Sam & Marina — Reception">
@@ -211,7 +242,7 @@ ul.tracks .rm:hover{background:var(--panel2);color:var(--pink)}
   <!-- DURATION -->
   <section class="screen" id="s-duration">
     <button class="back" data-go="title">← Back</button>
-    <div class="step">Step 2 of 3</div>
+    <div class="step">Step 2 of 4</div>
     <h1>How long is the event?</h1>
     <p class="lead">This sets how much music you'll pick before the playlist is complete.</p>
     <div class="panel">
@@ -226,21 +257,40 @@ ul.tracks .rm:hover{background:var(--panel2);color:var(--pink)}
   <!-- EVENT -->
   <section class="screen" id="s-event">
     <button class="back" data-go="duration">← Back</button>
-    <div class="step">Step 3 of 3</div>
-    <h1>What's it for?</h1>
-    <p class="lead">Songs are pulled to match the event.</p>
+    <div class="step">Step 3 of 4</div>
+    <h1>What should come up?</h1>
+    <p class="lead">Pick as many as you like — they're mixed together.</p>
+    <h3 class="sec">Event vibe <span>pick one or more</span></h3>
     <div class="events" id="events"></div>
     <div id="customWrap">
       <label class="f" for="custom">Describe the vibe (genre, mood, artist…)</label>
-      <input class="text" id="custom" placeholder="e.g. 70s soul, country, beach reggae">
+      <input class="text" id="custom" placeholder="e.g. beach reggae, country, Taylor Swift">
     </div>
-    <div class="row"><button class="btn primary" id="btnStart" disabled>Start swiping →</button></div>
+    <h3 class="sec">Genres &amp; eras <span>optional · pick any</span></h3>
+    <div class="tags" id="incTags"></div>
+    <h3 class="sec">Start from your Spotify playlist <span>optional</span></h3>
+    <div class="srcs" id="srcList"></div>
+    <button class="btn ghost wide" id="btnPickSrc">＋ Add a Spotify playlist</button>
+    <label class="tgl" id="srcCardsWrap"><input type="checkbox" id="srcCards"> Also show its songs as cards to swipe</label>
+    <div class="row"><button class="btn primary" id="btnIncNext" disabled>Next</button></div>
+  </section>
+
+  <!-- EXCLUDE -->
+  <section class="screen" id="s-exclude">
+    <button class="back" data-go="event">← Back</button>
+    <div class="step">Step 4 of 4</div>
+    <h1>What shouldn't come up?</h1>
+    <p class="lead">Tap anything to keep out. Matching songs are skipped automatically.</p>
+    <div class="tags" id="excTags"></div>
+    <label class="tgl"><input type="checkbox" id="noExplicit"> No explicit songs</label>
+    <div class="row"><button class="btn primary" id="btnStart">Start swiping →</button></div>
   </section>
 
   <!-- SWIPE -->
   <section class="screen" id="s-swipe">
     <div class="swtools">
       <button class="tool" id="btnExit" title="Everything is saved — come back anytime">← Save &amp; exit</button>
+      <button class="tool icon" id="btnFilters" title="Change what comes up / what's left out">⚙︎</button>
       <button class="tool" id="btnMatch" title="Suggest songs closer to the ones you've added">✨ Match picks</button>
       <button class="tool" id="btnReview" title="Save or export now, keep going later">Export →</button>
     </div>
@@ -280,6 +330,13 @@ ul.tracks .rm:hover{background:var(--panel2);color:var(--pink)}
   </section>
 </div>
 <div id="toast"></div>
+<div class="sheet" id="sheet" hidden>
+  <div class="sheetIn">
+    <div class="sheetHd"><b>Your Spotify playlists</b><button id="sheetX" aria-label="Close">✕</button></div>
+    <div id="sheetBody"></div>
+    <div class="sheetFt"><input class="text" id="srcLink" placeholder="…or paste a playlist link" autocomplete="off"><button class="btn ghost" id="btnSrcLink">Add</button></div>
+  </div>
+</div>
 
 <script>
 /* =========================================================================
@@ -387,6 +444,39 @@ const EVENTS = {
   }
 };
 
+/* =========================================================================
+   Genre & era tags — used both to pull songs in and to keep songs out.
+   g: words matched against the artist's Spotify genres; y: release-year range;
+   q: the Spotify search used when the tag is included.
+   ========================================================================= */
+const TAGS = {
+  motown:  { label: 'Motown',            g: ['motown'],                                   q: 'genre:motown' },
+  soul70:  { label: '70s soul & funk',   g: ['soul', 'funk'],          y: [1970, 1979],   q: 'genre:soul year:1970-1979' },
+  disco:   { label: 'Disco',             g: ['disco'],                                    q: 'genre:disco' },
+  pop80:   { label: '80s pop',           g: ['pop', 'new wave', 'synth'], y: [1980, 1989], q: 'genre:pop year:1980-1989' },
+  rock:    { label: 'Classic rock',      g: ['rock'],                  y: [1960, 1995],   q: 'genre:"classic rock"' },
+  rnb90:   { label: '90s R&B',           g: ['r&b', 'new jack swing'], y: [1990, 1999],   q: 'genre:"r&b" year:1990-1999' },
+  pop00:   { label: '2000s pop',         g: ['pop'],                   y: [2000, 2009],   q: 'genre:pop year:2000-2009' },
+  hits:    { label: "Today's hits",      g: ['pop'],                   y: [2020, 2026],   q: 'genre:pop year:2020-2026' },
+  hiphop:  { label: 'Hip-hop & rap',     g: ['hip hop', 'rap', 'trap', 'drill'],          q: 'genre:"hip hop"' },
+  rnb:     { label: 'Modern R&B',        g: ['r&b'],                   y: [2005, 2026],   q: 'genre:"r&b" year:2005-2026' },
+  edm:     { label: 'EDM & house',       g: ['edm', 'house', 'electro', 'big room', 'trance'], q: 'genre:edm' },
+  country: { label: 'Country',           g: ['country'],                                  q: 'genre:country' },
+  latin:   { label: 'Latin & reggaeton', g: ['latin', 'reggaeton', 'salsa', 'bachata', 'urbano', 'cumbia'], q: 'genre:reggaeton' },
+  afro:    { label: 'Afrobeats',         g: ['afrobeat', 'afropop', 'amapiano'],          q: 'genre:afrobeats' },
+  indie:   { label: 'Indie',             g: ['indie'],                                    q: 'genre:indie' },
+  folk:    { label: 'Acoustic & folk',   g: ['acoustic', 'folk', 'singer-songwriter'],    q: 'genre:folk' },
+  jazz:    { label: 'Jazz & swing',      g: ['jazz', 'swing', 'big band'],                q: 'genre:jazz' },
+  metal:   { label: 'Metal & hard rock', g: ['metal', 'hard rock'],                       q: 'genre:metal' },
+  punk:    { label: 'Punk & emo',        g: ['punk', 'emo'],                              q: 'genre:punk' },
+  kpop:    { label: 'K-pop',             g: ['k-pop'],                                    q: 'genre:k-pop' },
+  gospel:  { label: 'Gospel & worship',  g: ['gospel', 'christian', 'worship'],           q: 'genre:gospel' }
+};
+function tagHit(tag, genres, year) {
+  if (tag.y && !(+year >= tag.y[0] && +year <= tag.y[1])) return false;
+  return genres.some(g => tag.g.some(x => g.includes(x)));
+}
+
 /* ========================= utilities ========================= */
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -412,21 +502,29 @@ const SCOPES = 'streaming user-read-email user-read-private user-read-playback-s
 // Every playlist lives in a small library in this browser, so several can be in progress at once.
 const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 const freshState = () => ({ id: newId(), created: Date.now(), updated: Date.now(), stage: 'title', title: '', hours: 3, event: '', custom: '',
-  picks: [], seen: [], history: [], passArtists: {}, match: true, spotifyId: null, spotifyUrl: null });
+  picks: [], seen: [], history: [], passArtists: {}, match: true, spotifyId: null, spotifyUrl: null,
+  events: [], include: [], exclude: [], noExplicit: false, sources: [], sourceTracks: [], sourceCards: true });
+// older saves stored a single event
+const normalize = s => { if ((!s.events || !s.events.length) && s.event) s.events = [s.event]; delete s.event; return s; };
+const evLabels = (s = state) => [
+  ...(s.events || []).map(k => k === 'custom' ? (s.custom ? `“${s.custom}”` : '') : EVENTS[k]?.label),
+  ...(s.include || []).map(k => TAGS[k]?.label)
+].filter(Boolean).join(' + ') || (s.sources?.length ? 'From your playlist' : 'Not started');
+const hasChoices = (s = state) => (s.events || []).some(k => k !== 'custom' || (s.custom || '').trim()) || s.include.length || s.sources.length;
 let lists = LS.get('pc_lists', {});
 (() => { // bring over the single saved playlist from the first version
   const old = LS.get('pc_state', null);
   if (old && (old.title || old.picks?.length)) { const s = Object.assign(freshState(), old); lists[s.id] = s; LS.set('pc_lists', lists); LS.set('pc_active', s.id); }
   LS.del('pc_state');
 })();
-let state = Object.assign(freshState(), lists[LS.get('pc_active', '')] || {});
+let state = normalize(Object.assign(freshState(), lists[LS.get('pc_active', '')] || {}));
 function save() {
   if (!state.title.trim()) return; // nothing worth keeping until it has a name
   state.updated = Date.now(); lists[state.id] = state;
   LS.set('pc_lists', lists); LS.set('pc_active', state.id);
 }
 function resetPool() { buffer = []; poolKey = ''; current = null; tasteQueue = []; tasteAt = -1; }
-function openList(id) { stopClip(); state = Object.assign(freshState(), lists[id]); LS.set('pc_active', id); resetPool(); }
+function openList(id) { stopClip(); state = normalize(Object.assign(freshState(), lists[id])); LS.set('pc_active', id); resetPool(); }
 const targetMs = () => state.hours * 3600000;
 const pickedMs = () => state.picks.reduce((a, t) => a + t.dur, 0);
 
@@ -484,106 +582,144 @@ async function api(path, opts = {}, tries = 0) {
 }
 
 /* ========================= song pool ========================= */
-const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\(.*?\)|\[.*?\]/g, '').replace(/ - .*$/, '').replace(/[^a-z0-9]/g, '');
+const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\(.*?\)|\[.*?\]/g, '').replace(/ - .*$/, '').replace(/[^a-z0-9]/g, '');
 const key = (name, artist) => norm(name) + '::' + norm(artist);
 const JUNK = /karaoke|tribute|made famous|in the style of|instrumental|8[- ]?bit|lullaby|music box|piano version|workout|sped up|slowed|nightcore|originally performed/i;
-let buffer = [], seedQueue = [], queryQueue = [], filling = null, seenSet = new Set(), poolKey = '';
+let buffer = [], seedQueue = [], queryQueue = [], tagQueue = [], sourceQueue = [], filling = null, seenSet = new Set(), poolKey = '';
+const poolSig = () => JSON.stringify([state.events, state.custom, state.include, state.sources.map(s => s.id), state.sourceCards]);
 
 function buildPool() {
-  const ev = EVENTS[state.event];
   seenSet = new Set(state.seen);
   state.picks.forEach(t => { seenSet.add(t.id); seenSet.add(key(t.name, t.artist0)); });
-  seedQueue = shuffle(ev.seeds.map(s => s.split('|'))).filter(([t, a]) => !seenSet.has(key(t, a)));
-  const qs = state.event === 'custom'
-    ? [state.custom, `${state.custom} year:2010-2026`, `${state.custom} year:1970-2009`, `genre:"${state.custom}"`]
-    : ev.queries;
-  queryQueue = qs.map(q => ({ q, offset: 0 }));
+  const evs = state.events.filter(k => EVENTS[k]);
+  const seeds = [...new Set(evs.flatMap(k => EVENTS[k].seeds))];
+  seedQueue = shuffle(seeds.map(s => s.split('|'))).filter(([t, a]) => !seenSet.has(key(t, a)));
+  const qs = [];
+  evs.forEach(k => {
+    if (k === 'custom') { if (state.custom) qs.push(state.custom, `${state.custom} year:2010-2026`, `${state.custom} year:1970-2009`, `genre:"${state.custom}"`); }
+    else qs.push(...EVENTS[k].queries);
+  });
+  queryQueue = shuffle([...new Set(qs)]).map(q => ({ q, offset: 0 }));
+  tagQueue = shuffle(state.include.filter(k => TAGS[k]).map(k => ({ q: TAGS[k].q, why: TAGS[k].label, offset: 0 })));
+  sourceQueue = state.sourceCards ? shuffle(state.sourceTracks).filter(t => !seenSet.has(t.id) && !seenSet.has(key(t.name, t.artist0))) : [];
   buffer = [];
-  poolKey = state.event + '|' + state.custom;
+  poolKey = poolSig();
 }
 function simplify(t) {
   return { id: t.id, uri: t.uri, name: t.name, artists: t.artists.map(a => a.name).join(', '), artist0: t.artists[0]?.name || '',
            album: t.album?.name || '', image: (t.album?.images || [])[0]?.url || '', dur: t.duration_ms,
            url: t.external_urls?.spotify || `https://open.spotify.com/track/${t.id}`,
-           year: (t.album?.release_date || '').slice(0, 4), artistId: t.artists[0]?.id || '' };
+           year: (t.album?.release_date || '').slice(0, 4), artistId: t.artists[0]?.id || '', explicit: !!t.explicit };
 }
 function accept(t, why) {
-  if (!t || !t.id || t.is_playable === false) return false;
-  const a0 = t.artists?.[0]?.name || '';
-  if ((state.passArtists?.[a0] || 0) >= 2 && !state.picks.some(p => p.artist0 === a0)) return false; // passed twice, never added
+  if (!t || !t.id || t.is_playable === false || !t.artists) return false;
   if (JUNK.test(t.name) || JUNK.test(t.album?.name || '')) return false;
-  const k = key(t.name, t.artists[0]?.name);
-  if (seenSet.has(t.id) || seenSet.has(k)) return false;
-  if (buffer.some(b => b.id === t.id || key(b.name, b.artist0) === k)) return false;
-  buffer.push(Object.assign(simplify(t), why ? { why } : {}));
+  return acceptS(simplify(t), why);
+}
+function acceptS(s, why) { // s is an already-simplified song
+  if (state.noExplicit && s.explicit) return false;
+  if ((state.passArtists?.[s.artist0] || 0) >= 2 && !state.picks.some(p => p.artist0 === s.artist0)) return false; // passed twice, never added
+  const k = key(s.name, s.artist0);
+  if (seenSet.has(s.id) || seenSet.has(k)) return false;
+  if (buffer.some(b => b.id === s.id || key(b.name, b.artist0) === k)) return false;
+  const c = Object.assign({}, s); delete c.from; delete c.srcId;
+  if (why) c.why = why;
+  buffer.push(c);
   return true;
 }
+function markSeen(t) { seenSet.add(t.id); seenSet.add(key(t.name, t.artist0)); state.seen.push(t.id, key(t.name, t.artist0)); }
 
-/* ========================= match my picks ========================= */
-// Spotify no longer offers recommendations, so "closer to your picks" is built from what
-// you've added: those artists, their genres, and the era of the songs. Taste searches are
-// mixed into the queue and the next card is the best-scoring one in the buffer.
+/* ========================= genres, exclusions, taste ========================= */
+// Spotify no longer offers recommendations or song genres, so this uses the genres Spotify
+// lists for each artist (looked up once and cached), plus release year.
 let tasteQueue = [], tasteAt = -1;
 const genreCache = LS.get('pc_genres', {});
-async function learnArtist(t) {
-  if (!t.artistId || genreCache[t.artistId]) return;
-  try { const a = await api(`/artists/${t.artistId}`); genreCache[t.artistId] = a?.genres || []; LS.set('pc_genres', genreCache); }
-  catch (e) { console.warn(e); }
+const genreInflight = {};
+function learnArtist(t) {
+  const id = t.artistId;
+  if (!id || genreCache[id]) return Promise.resolve();
+  if (genreInflight[id]) return genreInflight[id];
+  return (genreInflight[id] = api(`/artists/${id}`)
+    .then(a => { genreCache[id] = a?.genres || []; LS.set('pc_genres', genreCache); })
+    .catch(e => console.warn(e))
+    .finally(() => { delete genreInflight[id]; }));
+}
+async function excluded(c) {
+  if (!state.exclude.length) return false;
+  if (c.artistId && !genreCache[c.artistId]) await learnArtist(c);
+  const g = genreCache[c.artistId] || [];
+  return state.exclude.some(k => TAGS[k] && tagHit(TAGS[k], g, c.year));
 }
 function profile() {
-  const arts = {}, genres = {}, years = [];
-  state.picks.forEach(p => {
-    arts[p.artist0] = (arts[p.artist0] || 0) + 1;
-    (genreCache[p.artistId] || []).forEach(g => genres[g] = (genres[g] || 0) + 1);
-    if (+p.year) years.push(+p.year);
-  });
+  // songs you've added count double; songs from imported playlists count once
+  const arts = {}, mine = {}, genres = {}, years = [];
+  const take = (p, w) => {
+    arts[p.artist0] = (arts[p.artist0] || 0) + w;
+    (genreCache[p.artistId] || []).forEach(g => genres[g] = (genres[g] || 0) + w);
+    if (+p.year) for (let i = 0; i < w; i++) years.push(+p.year);
+  };
+  state.picks.forEach(p => { take(p, 2); mine[p.artist0] = (mine[p.artist0] || 0) + 1; });
+  state.sourceTracks.forEach(p => take(p, 1));
   years.sort((a, b) => a - b);
   const top = o => Object.entries(o).sort((a, b) => b[1] - a[1]).map(e => e[0]);
-  return { arts, topArtists: top(arts), topGenres: top(genres), year: years.length ? years[years.length >> 1] : null };
+  return { arts, mine, topArtists: top(arts), topGenres: top(genres), year: years.length ? years[years.length >> 1] : null };
 }
-const matching = () => state.match && state.picks.length >= 3;
+const matching = () => state.match && (state.picks.length >= 3 || state.sourceTracks.length > 0);
 function rebuildTaste() {
   const pr = profile();
   const yr = pr.year ? ` year:${pr.year - 6}-${Math.min(pr.year + 6, new Date().getFullYear())}` : '';
   const qs = [];
-  pr.topGenres.slice(0, 3).forEach(g => qs.push({ q: `genre:"${g}"${yr}`, why: `More ${g}`, offset: 0 }));
-  shuffle(pr.topArtists.slice(0, 6)).slice(0, 3).forEach(a => qs.push({ q: `artist:"${a}"`, why: `Because you added ${a}`, offset: 0, perCall: 2 }));
+  pr.topGenres.filter(g => !state.exclude.some(k => TAGS[k] && TAGS[k].g.some(x => g.includes(x)) && !TAGS[k].y))
+    .slice(0, 3).forEach(g => qs.push({ q: `genre:"${g}"${yr}`, why: `More ${g}`, offset: 0, max: 100 }));
+  shuffle(pr.topArtists.slice(0, 8)).slice(0, 3).forEach(a => qs.push({ q: `artist:"${a}"`, why: `Like ${a}`, offset: 0, perCall: 2, max: 100 }));
   tasteQueue = shuffle(qs); tasteAt = state.picks.length;
 }
 function score(c, pr) {
   let s = Math.random() * 0.8;
-  if (c.why) s += 1.5;
-  const n = pr.arts[c.artist0] || 0;           // same artist helps, but not 4 in a row
-  s += n === 1 ? 1 : n === 2 ? 0.4 : n >= 3 ? -1.5 : 0;
+  if (c.why) s += 1.2;
+  if (pr.arts[c.artist0]) s += 0.8;                       // an artist you like
+  const n = pr.mine[c.artist0] || 0;                      // …but not the same one 4 times
+  s += n === 2 ? -0.4 : n >= 3 ? -1.5 : 0;
   if (pr.year && +c.year && Math.abs(+c.year - pr.year) <= 6) s += 1;
+  const g = genreCache[c.artistId];
+  if (g && state.include.some(k => TAGS[k] && tagHit(TAGS[k], g, c.year))) s += 1.2;
   return s;
 }
 function pickNext() {
   if (buffer[0]?._front) { const t = buffer.shift(); delete t._front; return t; } // undo brings a song back first
-  if (!matching()) return buffer.shift();
+  if (!matching() && !state.include.length) return buffer.shift();
   const pr = profile(); let best = 0, bs = -Infinity;
   buffer.slice(0, 10).forEach((c, i) => { const s = score(c, pr); if (s > bs) { bs = s; best = i; } });
   return buffer.splice(best, 1)[0];
 }
-const poolExhausted = () => !seedQueue.length && !queryQueue.length && !buffer.length && !(matching() && tasteQueue.length);
-function fillBuffer(min = 5) {
+const poolExhausted = () => !seedQueue.length && !queryQueue.length && !tagQueue.length && !sourceQueue.length && !buffer.length && !(matching() && tasteQueue.length);
+async function runQuery(queue) {
+  const q = queue.shift();
+  const j = await api(`/search?type=track&market=from_token&limit=10&offset=${q.offset}&q=${encodeURIComponent(q.q)}`);
+  const items = j?.tracks?.items || []; let took = 0;
+  for (const t of shuffle(items)) { if (q.perCall && took >= q.perCall) break; if (accept(t, q.why)) took++; }
+  q.offset += 10;
+  if (items.length === 10 && q.offset < (q.max || 300)) queue.push(q); // rotate for variety
+}
+function fillBuffer(min = 6) {
   if (filling) return filling;
   const run = async () => {
     try {
       let guard = 0;
-      while (buffer.length < min && guard++ < 30 && (seedQueue.length || queryQueue.length || (matching() && tasteQueue.length))) {
+      const base = () => seedQueue.length || queryQueue.length;
+      while (buffer.length < min && guard++ < 30 &&
+             (base() || tagQueue.length || sourceQueue.length || (matching() && tasteQueue.length))) {
         if (matching() && (tasteAt < 0 || state.picks.length - tasteAt >= 3)) rebuildTaste();
-        // With "Match picks" on, about half the searches follow your taste
-        if (matching() && tasteQueue.length && (Math.random() < 0.5 || (!seedQueue.length && !queryQueue.length))) {
-          const q = tasteQueue.shift();
-          const j = await api(`/search?type=track&market=from_token&limit=10&offset=${q.offset}&q=${encodeURIComponent(q.q)}`);
-          const items = j?.tracks?.items || []; let took = 0;
-          for (const t of shuffle(items)) { if (q.perCall && took >= q.perCall) break; if (accept(t, q.why)) took++; }
-          q.offset += 10;
-          if (items.length === 10 && q.offset < 100) tasteQueue.push(q);
-          continue;
+        const r = Math.random();
+        // songs from your imported playlist (~20%)
+        if (sourceQueue.length && (r < 0.2 || !(base() || tagQueue.length))) {
+          const s = sourceQueue.shift(); acceptS(s, `From “${s.from}”`); continue;
         }
-        // Otherwise mostly curated picks (best fit for the event), with some search variety mixed in
+        // taste searches based on your picks / playlist (~35%)
+        if (matching() && tasteQueue.length && (r < 0.55 || !(base() || tagQueue.length))) { await runQuery(tasteQueue); continue; }
+        // genres & eras you chose (~25%)
+        if (tagQueue.length && (r < 0.8 || !base())) { await runQuery(tagQueue); continue; }
+        // event lists: mostly curated picks, with some search variety
         if (seedQueue.length && (!queryQueue.length || Math.random() < 0.8)) {
           const [title, artist] = seedQueue.shift();
           const j = await api(`/search?type=track&market=from_token&limit=5&q=${encodeURIComponent(title + ' ' + artist)}`);
@@ -592,20 +728,71 @@ function fillBuffer(min = 5) {
           const hit = items.find(t => t.artists.some(x => norm(x.name) === a) && norm(t.name).startsWith(tt.slice(0, 6)))
                    || items.find(t => t.artists.some(x => { const n = norm(x.name); return n && (n.includes(a) || a.includes(n)); }) && norm(t.name).includes(tt.slice(0, 4)));
           accept(hit);
-        } else {
-          const q = queryQueue.shift();
-          const j = await api(`/search?type=track&market=from_token&limit=10&offset=${q.offset}&q=${encodeURIComponent(q.q)}`);
-          const items = j?.tracks?.items || [];
-          shuffle(items).forEach(t => accept(t));
-          q.offset += 10;
-          if (items.length === 10 && q.offset < 300) queryQueue.push(q); // rotate for variety
-        }
+        } else if (queryQueue.length) await runQuery(queryQueue);
       }
+      // look up genres for the next few songs so filters and ranking are ready
+      if (state.exclude.length || state.include.length) buffer.slice(0, 5).forEach(learnArtist);
     } catch (e) { console.warn(e); toast(e.message); }
   };
   // .finally always runs after this assignment, so the busy flag can never get stuck
   filling = run().finally(() => { filling = null; });
   return filling;
+}
+
+/* ========================= import a Spotify playlist ========================= */
+// Since Feb 2026 Spotify only lets development apps read playlists you own or collaborate on.
+let meId = null;
+const nextPath = u => u ? u.replace('https://api.spotify.com/v1', '') : null;
+async function openPicker() {
+  $('#sheet').hidden = false; $('#srcLink').value = '';
+  const body = $('#sheetBody');
+  body.innerHTML = '<div class="sheetNote"><div class="spin"></div>Loading your playlists…</div>';
+  try {
+    if (!meId) meId = (await api('/me')).id;
+    let all = [], url = '/me/playlists?limit=50';
+    for (let i = 0; i < 4 && url; i++) { const j = await api(url); all = all.concat((j.items || []).filter(Boolean)); url = nextPath(j.next); }
+    const ok = p => p.owner?.id === meId || p.collaborative;
+    const count = p => p.items?.total ?? p.tracks?.total ?? '';
+    const row = (p, on) => `<button class="pick" ${on ? '' : 'disabled'} data-src="${esc(p.id)}" data-name="${esc(p.name)}">
+        ${p.images?.[0]?.url ? `<img src="${esc(p.images[0].url)}" alt="">` : '<div class="ph"></div>'}
+        <div class="t"><b>${esc(p.name)}</b><span>${count(p) !== '' ? count(p) + ' songs' : ''}${state.sources.some(s => s.id === p.id) ? ' · added' : ''}</span></div></button>`;
+    const mine = all.filter(ok), other = all.filter(p => !ok(p));
+    body.innerHTML = (mine.length ? mine.map(p => row(p, true)).join('') : '<div class="sheetNote">No playlists of your own yet.</div>')
+      + (other.length ? `<div class="sheetNote">Followed playlists — Spotify only lets this app read playlists you created or collaborate on. Tip: in Spotify, add its songs to a new playlist of your own.</div>${other.map(p => row(p, false)).join('')}` : '');
+  } catch (e) { body.innerHTML = `<div class="sheetNote">Couldn't load playlists: ${esc(e.message)}</div>`; }
+}
+async function addSource(id, name) {
+  if (state.sources.some(s => s.id === id)) return toast('That playlist is already added');
+  toast('Reading playlist…', 6000);
+  try {
+    const raw = []; let url = `/playlists/${id}/items?limit=50`;
+    for (let i = 0; i < 6 && url; i++) {
+      const j = await api(url);
+      (j.items || []).forEach(it => { const t = it?.item || it?.track; if (t && t.id && t.artists && t.type !== 'episode') raw.push(t); });
+      url = nextPath(j.next);
+    }
+    if (!raw.length) return toast('That playlist has no songs this app can read');
+    if (!name) { try { name = (await api(`/playlists/${id}`)).name; } catch { name = 'Spotify playlist'; } }
+    const songs = raw.map(t => Object.assign(simplify(t), { from: name, srcId: id }));
+    state.sources.push({ id, name, n: songs.length });
+    state.sourceTracks = state.sourceTracks.concat(songs).slice(-400);
+    tasteAt = -1; save(); renderSources(); updateIncNext();
+    $('#sheet').hidden = true;
+    toast(`Added ${songs.length} songs from “${name}”`);
+    // learn the genres of its main artists in the background
+    const counts = {}; songs.forEach(s => counts[s.artistId] = (counts[s.artistId] || 0) + 1);
+    Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 12).forEach(([artistId]) => learnArtist({ artistId }));
+  } catch (e) {
+    toast(e.status === 403 || e.status === 404
+      ? 'Spotify only lets this app read playlists you created or collaborate on'
+      : 'Couldn\'t read that playlist: ' + e.message, 5000);
+  }
+}
+function renderSources() {
+  $('#srcList').innerHTML = state.sources.map(s => `<div class="src"><span>🎧</span><b>${esc(s.name)}</b><span>${s.n} songs</span>
+      <button data-unsrc="${esc(s.id)}" aria-label="Remove">✕</button></div>`).join('');
+  $('#srcCardsWrap').style.display = state.sources.length ? 'flex' : 'none';
+  $('#srcCards').checked = state.sourceCards;
 }
 
 /* ========================= playback ========================= */
@@ -753,15 +940,20 @@ function deckMessage(html) { $('#deck').innerHTML = `<div class="center"><div>${
 
 async function nextCard() {
   current = null;
-  if (!buffer.length) {
-    deckMessage('<div class="spin"></div>Finding songs…');
-    await fillBuffer(6);
+  let c = null;
+  for (let tries = 0; tries < 40 && !c; tries++) {
+    if (!buffer.length) { deckMessage('<div class="spin"></div>Finding songs…'); await fillBuffer(6); }
+    if (!buffer.length) break;
+    const cand = pickNext();
+    if (await excluded(cand)) { markSeen(cand); continue; } // on your "leave out" list
+    c = cand;
   }
-  if (!buffer.length) {
-    if (poolExhausted()) { stopClip(); toast('That\'s every song in this mix — review your picks'); return go('review'); }
+  if (!$('#s-swipe').classList.contains('on')) { if (c) { c._front = true; buffer.unshift(c); } return; } // left the screen meanwhile
+  if (!c) {
+    if (poolExhausted()) { stopClip(); save(); toast('That\'s every song for these choices — review your picks'); return go('review'); }
     return deckMessage('Couldn\'t load songs.<br><br><button class="btn ghost" onclick="nextCard()">Try again</button>');
   }
-  current = pickNext();
+  current = c;
   renderCard(current);
   playClip(current);
   fillBuffer(6);
@@ -773,7 +965,7 @@ function renderCard(t) {
       <div class="art" style="background-image:url('${esc(t.image)}')">
         <div class="stamp like">ADD</div><div class="stamp nope">PASS</div>
       </div>
-      <div class="meta">${t.why && matching() ? `<div class="why">✨ ${esc(t.why)}</div>` : ''}<h3>${esc(t.name)}</h3><p>${esc(t.artists)}</p><p class="sub">${esc(t.album)} · ${fmt(t.dur)}</p></div>
+      <div class="meta">${t.why ? `<div class="why">✨ ${esc(t.why)}</div>` : ''}<h3>${esc(t.name)}</h3><p>${esc(t.artists)}</p><p class="sub">${esc(t.album)} · ${fmt(t.dur)}</p></div>
       <div class="player">
         <button class="pbtn" id="backBtn" title="Back 10s">−10</button>
         <div class="ring"><svg viewBox="0 0 60 60"><circle class="bg" cx="30" cy="30" r="26"/><circle class="fg" id="ringFg" cx="30" cy="30" r="26"/></svg>
@@ -883,7 +1075,8 @@ function exportExcel() {
   ws['!cols'] = [{ wch: 4 }, { wch: 38 }, { wch: 30 }, { wch: 30 }, { wch: 9 }, { wch: 48 }];
   rows.forEach((r, i) => { const ref = XLSX.utils.encode_cell({ r: i + 1, c: 5 }); if (ws[ref]) ws[ref].l = { Target: r['Spotify Link'] }; });
   const info = XLSX.utils.aoa_to_sheet([
-    ['Playlist', state.title], ['Event', EVENTS[state.event]?.label + (state.event === 'custom' ? ` (${state.custom})` : '')],
+    ['Playlist', state.title], ['Mix', evLabels()],
+    ['Left out', state.exclude.map(k => TAGS[k]?.label).filter(Boolean).join(', ') + (state.noExplicit ? (state.exclude.length ? ', ' : '') + 'explicit songs' : '') || '—'],
     ['Target length', `${state.hours} hours`], ['Songs', state.picks.length], ['Total length', fmtLong(pickedMs())],
     ['Created', new Date().toLocaleString()]
   ]);
@@ -906,7 +1099,6 @@ function exportExcel() {
 async function saveToSpotify() {
   const b = $('#btnSave'); b.disabled = true; b.textContent = 'Saving…';
   try {
-    const ev = EVENTS[state.event];
     const uris = state.picks.map(t => t.uri);
     let id = state.spotifyId, url = state.spotifyUrl, updated = false;
     if (id) { // saved before: replace its songs so there's one playlist, not copies
@@ -916,7 +1108,7 @@ async function saveToSpotify() {
     if (!id) {
       const pl = await api('/me/playlists', { method: 'POST', body: JSON.stringify({
         name: state.title, public: false,
-        description: `${ev.label} playlist · Curated with Playlist Curator.` }) });
+        description: `${evLabels()} · Curated with Playlist Curator.`.slice(0, 300) }) });
       id = pl.id; url = pl.external_urls?.spotify || `https://open.spotify.com/playlist/${pl.id}`;
       await api(`/playlists/${id}/items`, { method: 'POST', body: JSON.stringify({ uris: uris.slice(0, 100) }) });
     }
@@ -938,11 +1130,11 @@ function timeAgo(t) {
 function renderHome() {
   const all = Object.values(lists).sort((a, b) => b.updated - a.updated);
   $('#homeList').innerHTML = all.length ? all.map(p => {
-    const ms = p.picks.reduce((a, t) => a + t.dur, 0), tgt = p.hours * 3600000, ev = EVENTS[p.event];
+    const ms = p.picks.reduce((a, t) => a + t.dur, 0), tgt = p.hours * 3600000, ev = EVENTS[(p.events || [])[0] || p.event];
     const done = ms >= tgt;
     return `<div class="pl" data-open="${esc(p.id)}">
       <div class="plTop"><span class="plE">${ev?.emoji || '🎵'}</span>
-        <div class="plT"><b>${esc(p.title)}</b><span>${esc(ev?.label || 'Not started')} · ${p.picks.length} songs · ${fmtLong(ms)} of ${p.hours}h</span></div>
+        <div class="plT"><b>${esc(p.title)}</b><span>${esc(evLabels(normalize(Object.assign(freshState(), p))))} · ${p.picks.length} songs · ${fmtLong(ms)} of ${p.hours}h</span></div>
         <button class="plDel" data-del="${esc(p.id)}" title="Delete">✕</button></div>
       <div class="bar"><i style="width:${Math.min(100, ms / tgt * 100)}%"></i></div>
       <div class="plMeta"><span>${done ? 'Complete 🎉' : 'In progress'} · edited ${timeAgo(p.updated)}</span>${p.spotifyId ? '<span class="sp">On Spotify ✓</span>' : ''}</div>
@@ -953,7 +1145,7 @@ function continueList(id) {
   openList(id);
   const valid = ['title', 'duration', 'event', 'swipe', 'review'];
   let stage = valid.includes(state.stage) ? state.stage : 'title';
-  if (stage === 'swipe' && !state.event) stage = 'event';
+  if (stage === 'swipe' && !hasChoices()) stage = 'event';
   go(stage);
 }
 function newList() { stopClip(); state = freshState(); resetPool(); go('title'); }
@@ -968,10 +1160,11 @@ function go(stage, persist = true) {
   if (stage === 'title') { $('#title').value = state.title; $('#btnTitleNext').disabled = !state.title.trim(); setTimeout(() => $('#title').focus(), 50); }
   if (stage === 'duration') setHours(state.hours);
   if (stage === 'event') renderEvents();
+  if (stage === 'exclude') renderExclude();
   if (stage === 'review') renderReview();
   if (stage === 'swipe') {
     updateProgress(); updateMatchBtn();
-    if (poolKey !== state.event + '|' + state.custom) buildPool();
+    if (poolKey !== poolSig()) buildPool();
     if (current) { renderCard(current); playClip(current); }
     else deckMessage('<button class="btn primary" id="btnResume">▶ Start swiping</button><p class="hint">Each song plays a 15-second bite.</p>');
     const r = $('#btnResume'); if (r) r.onclick = () => { player?.activateElement?.(); nextCard(); };
@@ -993,15 +1186,22 @@ function suggestedEvent() {
 }
 function renderEvents() {
   const sug = suggestedEvent();
-  if (!state.event && sug) { state.event = sug; save(); }
+  if (!state.events.length && sug && !state.sugApplied) { state.events = [sug]; state.sugApplied = true; save(); }
   $('#events').innerHTML = Object.entries(EVENTS).map(([k, ev]) => `
-    <button class="ev ${state.event === k ? 'on' : ''}" data-ev="${k}">
+    <button class="ev ${state.events.includes(k) ? 'on' : ''}" data-ev="${k}">
       <div class="e">${ev.emoji}</div>${k === sug ? '<div class="sug">Suggested</div>' : ''}<b>${ev.label}</b><span>${ev.blurb}</span>
     </button>`).join('');
-  $('#customWrap').style.display = state.event === 'custom' ? 'block' : 'none';
+  $('#customWrap').style.display = state.events.includes('custom') ? 'block' : 'none';
   $('#custom').value = state.custom;
-  $('#btnStart').disabled = !state.event || (state.event === 'custom' && !state.custom.trim());
+  $('#incTags').innerHTML = Object.entries(TAGS).map(([k, t]) => `<button class="tag ${state.include.includes(k) ? 'on' : ''}" data-tag="${k}">${esc(t.label)}</button>`).join('');
+  renderSources(); updateIncNext();
 }
+function updateIncNext() { $('#btnIncNext').disabled = !hasChoices(); }
+function renderExclude() {
+  $('#excTags').innerHTML = Object.entries(TAGS).map(([k, t]) => `<button class="tag ${state.exclude.includes(k) ? 'x' : ''}" data-tag="${k}">${esc(t.label)}</button>`).join('');
+  $('#noExplicit').checked = !!state.noExplicit;
+}
+const toggleIn = (arr, k) => arr.includes(k) ? arr.filter(x => x !== k) : arr.concat(k);
 
 $('#btnLogin').onclick = login;
 $('#clientId').addEventListener('keydown', e => e.key === 'Enter' && login());
@@ -1013,8 +1213,45 @@ $('#hours').addEventListener('input', e => setHours(e.target.value));
 $('#hourChips').innerHTML = [1, 2, 3, 4, 5, 6].map(h => `<button class="chip" data-h="${h}">${h} hr</button>`).join('');
 $('#hourChips').addEventListener('click', e => { const c = e.target.closest('.chip'); if (c) setHours(c.dataset.h); });
 $('#btnDurNext').onclick = () => go('event');
-$('#events').addEventListener('click', e => { const b = e.target.closest('.ev'); if (!b) return; state.event = b.dataset.ev; save(); renderEvents(); if (state.event === 'custom') $('#custom').focus(); });
-$('#custom').addEventListener('input', e => { state.custom = e.target.value.trim(); save(); $('#btnStart').disabled = !state.custom; });
+$('#events').addEventListener('click', e => {
+  const b = e.target.closest('.ev'); if (!b) return;
+  state.events = toggleIn(state.events, b.dataset.ev); state.sugApplied = true; save(); renderEvents();
+  if (state.events.includes('custom') && b.dataset.ev === 'custom') $('#custom').focus();
+});
+$('#custom').addEventListener('input', e => { state.custom = e.target.value.trim(); save(); updateIncNext(); });
+$('#incTags').addEventListener('click', e => {
+  const b = e.target.closest('.tag'); if (!b) return; const k = b.dataset.tag;
+  state.include = toggleIn(state.include, k);
+  if (state.include.includes(k) && state.exclude.includes(k)) { state.exclude = state.exclude.filter(x => x !== k); toast(`Removed ${TAGS[k].label} from "leave out"`); }
+  save(); renderEvents();
+});
+$('#excTags').addEventListener('click', e => {
+  const b = e.target.closest('.tag'); if (!b) return; const k = b.dataset.tag;
+  state.exclude = toggleIn(state.exclude, k);
+  if (state.exclude.includes(k) && state.include.includes(k)) { state.include = state.include.filter(x => x !== k); toast(`Removed ${TAGS[k].label} from "include"`); }
+  save(); renderExclude();
+});
+$('#noExplicit').onchange = e => { state.noExplicit = e.target.checked; save(); buffer = buffer.filter(t => !(state.noExplicit && t.explicit)); };
+$('#btnIncNext').onclick = () => go('exclude');
+$('#btnPickSrc').onclick = openPicker;
+$('#sheetX').onclick = () => { $('#sheet').hidden = true; };
+$('#sheet').addEventListener('click', e => {
+  if (e.target.id === 'sheet') $('#sheet').hidden = true;
+  const p = e.target.closest('[data-src]'); if (p) addSource(p.dataset.src, p.dataset.name);
+});
+$('#btnSrcLink').onclick = () => {
+  const v = $('#srcLink').value.trim(), m = v.match(/playlist[/:]([A-Za-z0-9]{10,})/) || v.match(/^([A-Za-z0-9]{22})$/);
+  if (!m) return toast('Paste a Spotify playlist link (open.spotify.com/playlist/…)');
+  addSource(m[1]);
+};
+$('#srcList').addEventListener('click', e => {
+  const b = e.target.closest('[data-unsrc]'); if (!b) return;
+  state.sources = state.sources.filter(s => s.id !== b.dataset.unsrc);
+  state.sourceTracks = state.sourceTracks.filter(t => t.srcId !== b.dataset.unsrc);
+  tasteAt = -1; save(); renderSources(); updateIncNext();
+});
+$('#srcCards').onchange = e => { state.sourceCards = e.target.checked; save(); };
+$('#btnFilters').onclick = () => go('event');
 $('#btnStart').onclick = () => { player?.activateElement?.(); current = null; go('swipe'); nextCard(); };
 $$('[data-go]').forEach(b => b.onclick = () => go(b.dataset.go));
 $('#btnYes').onclick = () => decide('add');
@@ -1035,7 +1272,7 @@ $('#btnReview').onclick = () => go('review');
 $('#btnMatch').onclick = () => {
   state.match = !state.match; save(); updateMatchBtn();
   tasteQueue = []; tasteAt = -1;
-  toast(state.match ? (state.picks.length >= 3 ? 'Suggestions will lean toward your picks' : 'Kicks in after you add 3 songs') : 'Back to the general mix for this event');
+  toast(state.match ? (matching() ? 'Suggestions will lean toward your picks' : 'Kicks in after you add 3 songs (or add a Spotify playlist)') : 'Back to the general mix');
 };
 $('#homeList').addEventListener('click', e => {
   const del = e.target.closest('[data-del]');
