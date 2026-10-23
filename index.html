@@ -76,7 +76,7 @@ input[type=range]{width:100%;accent-color:var(--green)}
 .bar{height:8px;background:var(--panel2);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
 .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green),#7ef0a8);transition:width .35s}
 .barlbl{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin:6px 0 14px}
-#deck{position:relative;height:min(560px,calc(100vh - 250px));height:min(560px,calc(100dvh - 250px));min-height:430px}
+#deck{position:relative;height:min(540px,calc(100vh - 370px));height:min(540px,calc(100dvh - 370px));min-height:320px}
 .nodev{padding:4px 18px 16px;text-align:center;font-size:14px;color:#d6d6e0}
 .nodev p{margin:0 0 12px}
 .nodevBtns{display:flex;gap:10px}
@@ -176,7 +176,7 @@ body.touch .keys{display:none}
 }
 #deck::before{content:"";position:absolute;inset:14px 14px -8px;border-radius:24px;background:var(--panel);border:1px solid var(--line);opacity:.6;transform:scale(.96)}
 .card{position:absolute;inset:0;background:var(--panel);border:1px solid var(--line);border-radius:24px;overflow:hidden;display:flex;flex-direction:column;touch-action:none;user-select:none;transition:transform .28s ease,opacity .28s ease;box-shadow:0 20px 50px #0008}
-.art{position:relative;flex:1;min-height:200px;background:#222 center/cover no-repeat}
+.art{position:relative;flex:1;min-height:90px;background:#222 center/cover no-repeat}
 .art::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,#17171ff0)}
 .stamp{position:absolute;top:22px;z-index:2;padding:6px 14px;border:3px solid;border-radius:10px;font-weight:900;font-size:26px;letter-spacing:.08em;opacity:0;transform:rotate(-12deg)}
 .stamp.like{left:20px;color:var(--green);border-color:var(--green)}
@@ -202,7 +202,27 @@ body.touch .keys{display:none}
 .act.no{color:var(--pink);border-color:#ff4f7b66}
 .act.yes{color:var(--green);border-color:#1ed76066}
 .act.small{width:48px;height:48px;font-size:18px;color:var(--amber)}
-.vol{display:flex;align-items:center;gap:12px;max-width:360px;margin:18px auto 0;padding:0 6px}
+@media (max-height:820px){body.swiping header{display:none}}
+.focusBar{display:flex;gap:8px;overflow-x:auto;margin:0 -16px 12px;padding:2px 16px 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.focusBar::-webkit-scrollbar{display:none}
+.focusBar .lbl{flex:none;align-self:center;font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.fchip{flex:none;padding:7px 12px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:13.5px;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis}
+.fchip.on{background:var(--green);border-color:var(--green);color:#06120a;font-weight:700}
+.fchip.add{color:var(--green);border-style:dashed}
+.helpCard{padding:4px 8px 10px;font-size:14px;color:#d6d6e0}
+.helpCard>b{display:block;font-size:16px;color:var(--text);margin:6px 0}
+.helpCard p{margin:4px 0 10px;color:var(--muted)}
+.opt{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0}
+.opt b{color:var(--text)}
+.row2{display:flex;gap:8px}
+.row2 .btn{flex:1;padding:11px 12px;font-size:14px;text-decoration:none}
+a.btn{color:inherit}
+a.btn.primary{color:#06120a}
+.pastePanel{padding:4px 8px 10px}
+.pastePanel .text{font-size:15px;margin-bottom:10px}
+.pastePanel textarea.text{min-height:150px;resize:vertical;font-family:inherit;line-height:1.4}
+.pick .mark{color:var(--green);font-size:12px;font-weight:700}
+.vol{display:flex;align-items:center;gap:12px;max-width:360px;margin:10px auto 0;padding:0 6px}
 .vol button{font-size:20px;width:36px;height:36px;border-radius:50%;flex:none}
 .vol input{flex:1;accent-color:var(--green);height:28px}
 .vol input:disabled{opacity:.4}
@@ -230,7 +250,7 @@ ul.tracks .rm:hover{background:var(--panel2);color:var(--pink)}
 .n{width:22px;text-align:right;font-size:12px;color:var(--muted);flex:none}
 .saved{margin-top:12px;padding:12px;border-radius:12px;background:#1ed76014;border:1px solid #1ed76055;font-size:14px;display:none}
 .saved a{color:var(--green);font-weight:700}
-#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(30px);background:#2a2a38;border:1px solid var(--line);padding:12px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;max-width:90vw;z-index:50}
+#toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top));transform:translateX(-50%) translateY(-30px);background:#2a2a38;border:1px solid var(--line);padding:12px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;max-width:90vw;z-index:50}
 #toast.on{opacity:1;transform:translateX(-50%)}
 .back{color:var(--muted);font-size:14px;margin-bottom:8px;padding:4px 0}
 </style>
@@ -321,9 +341,9 @@ ul.tracks .rm:hover{background:var(--panel2);color:var(--pink)}
     <h3 class="sec">Where the music is from <span>pick any</span></h3>
     <div class="tags" id="regTags"></div>
     <label class="tgl" id="unkWrap"><input type="checkbox" id="allowUnknown"> Allow songs if we can't tell where they're from</label>
-    <h3 class="sec">Start from your Spotify playlist <span>optional</span></h3>
+    <h3 class="sec">Add playlists to swipe from <span>yours, a friend's, or an album</span></h3>
     <div class="srcs" id="srcList"></div>
-    <button class="btn ghost wide" id="btnPickSrc">＋ Add a Spotify playlist</button>
+    <button class="btn ghost wide" id="btnPickSrc">＋ Add a playlist, album or list of songs</button>
     <label class="tgl" id="srcCardsWrap"><input type="checkbox" id="srcCards"> Also show its songs as cards to swipe</label>
     <div class="row"><button class="btn primary" id="btnIncNext" disabled>Next</button></div>
   </section>
@@ -362,6 +382,7 @@ ul.tracks .rm:hover{background:var(--panel2);color:var(--pink)}
       <button class="tool" id="btnMatch" title="Suggest songs closer to the ones you've added">✨ Match picks</button>
       <button class="tool" id="btnReview" title="Save or export now, keep going later">Export →</button>
     </div>
+    <div class="focusBar" id="focusBar"></div>
     <div class="topbar"><h2 id="swTitle"></h2><span class="count" id="swCount"></span></div>
     <div class="bar"><i id="swBar"></i></div>
     <div class="barlbl"><span id="swTime"></span><span id="swLeft"></span></div>
@@ -406,9 +427,9 @@ ul.tracks .rm:hover{background:var(--panel2);color:var(--pink)}
 <div id="toast"></div>
 <div class="sheet" id="sheet" hidden>
   <div class="sheetIn">
-    <div class="sheetHd"><b>Your Spotify playlists</b><button id="sheetX" aria-label="Close">✕</button></div>
+    <div class="sheetHd"><b id="sheetTitle">Add a playlist</b><button id="sheetX" aria-label="Close">✕</button></div>
     <div id="sheetBody"></div>
-    <div class="sheetFt"><input class="text" id="srcLink" placeholder="…or paste a playlist link" autocomplete="off"><button class="btn ghost" id="btnSrcLink">Add</button></div>
+    <div class="sheetFt"><input class="text" id="srcLink" placeholder="…or paste any playlist or album link" autocomplete="off"><button class="btn ghost" id="btnSrcLink">Add</button></div>
   </div>
 </div>
 
@@ -658,7 +679,7 @@ const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2
 const freshState = () => ({ id: newId(), created: Date.now(), updated: Date.now(), stage: 'title', title: '', hours: 3, event: '', custom: '',
   picks: [], seen: [], history: [], passArtists: {}, match: true, spotifyId: null, spotifyUrl: null,
   events: [], include: [], exclude: [], noExplicit: false, sources: [], sourceTracks: [], sourceCards: true,
-  regions: [], allowUnknownOrigin: false, tempo: 'any', tempoSet: false, ready: [], readySig: '', customTags: {}, excludeAuto: true });
+  regions: [], allowUnknownOrigin: false, tempo: 'any', tempoSet: false, ready: [], readySig: '', customTags: {}, excludeAuto: true, focus: '' });
 // older saves stored a single event
 const normalize = s => {
   if ((!s.events || !s.events.length) && s.event) s.events = [s.event]; delete s.event;
@@ -762,14 +783,18 @@ const EVENT_GENRES = {
 };
 const customWords = () => (state.custom || '').toLowerCase().split(/[\s,/&+]+/).filter(w => w.length >= 3 && !/^(and|the|music|songs|vibes?|with)$/.test(w));
 let buffer = [], seedQueue = [], queryQueue = [], tagQueue = [], sourceQueue = [], filling = null, seenSet = new Set(), poolKey = '';
-const poolSig = () => JSON.stringify([state.events, state.custom, state.include, state.sources.map(s => s.id), state.sourceCards, state.regions]);
+const poolSig = () => JSON.stringify([state.events, state.custom, state.include, state.sources.map(s => s.id), state.sourceCards, state.regions, state.focus || '']);
+// "Focus" narrows swiping to one vibe, genre or attached playlist: 'ev:<event>', 'tag:<genre>', 'src:<playlist>'
+const focusKind = () => (state.focus || '').split(':')[0];
+const focusKey = () => { const f = state.focus || ''; return f.slice(f.indexOf(':') + 1); };
 
 function buildPool() {
   seenSet = new Set(state.seen);
   titleSeen = {};
   state.seen.forEach(s => { const i = s.indexOf('::'); if (i > 0) addTitle(s.slice(0, i), [s.slice(i + 2)]); });
   state.picks.forEach(t => { seenSet.add(t.id); seenSet.add(key(t.name, t.artist0)); addTitle(norm(t.name), artistsOf(t)); });
-  const evs = state.events.filter(k => EVENTS[k]);
+  const fk = focusKind(), fv = focusKey();
+  const evs = (fk === 'ev' ? [fv] : fk ? [] : state.events).filter(k => EVENTS[k]);
   const seeds = [...new Set(evs.flatMap(k => EVENTS[k].seeds))];
   seedQueue = shuffle(seeds.map(s => s.split('|'))).filter(([t, a]) => !seenSet.has(key(t, a)));
   const qs = [];
@@ -780,10 +805,12 @@ function buildPool() {
     } else EVENTS[k].queries.forEach(q => qs.push({ q, max: 60 }));
   });
   queryQueue = shuffle(qs.filter((q, i) => qs.findIndex(x => x.q === q.q && x.lookup === q.lookup) === i)).map(q => Object.assign({ offset: 0 }, q));
-  const tags = state.include.filter(k => TAGS[k]).flatMap(k => [].concat(TAGS[k].q).map(q => ({ q, why: TAGS[k].label, offset: 0, max: 80, tag: k })));
-  const regs = (state.regions || []).flatMap(r => (REGIONS[r]?.q || []).map(q => ({ q, why: `From ${REGIONS[r].label}`, offset: 0, max: 40, src: 'region' })));
+  const incl = fk === 'tag' ? [fv] : fk ? [] : state.include;
+  const tags = incl.filter(k => TAGS[k]).flatMap(k => [].concat(TAGS[k].q).map(q => ({ q, why: TAGS[k].label, offset: 0, max: 80, tag: k })));
+  const regs = (fk ? [] : (state.regions || [])).flatMap(r => (REGIONS[r]?.q || []).map(q => ({ q, why: `From ${REGIONS[r].label}`, offset: 0, max: 40, src: 'region' })));
   tagQueue = shuffle(tags.concat(regs));
-  sourceQueue = state.sourceCards ? shuffle(state.sourceTracks).filter(t => !seenSet.has(t.id) && !seenSet.has(key(t.name, t.artist0))) : [];
+  const srcs = fk === 'src' ? state.sourceTracks.filter(t => t.srcId === fv) : fk ? [] : (state.sourceCards ? state.sourceTracks : []);
+  sourceQueue = shuffle(srcs).filter(t => !seenSet.has(t.id) && !seenSet.has(key(t.name, t.artist0)));
   buffer = [];
   poolKey = poolSig();
 }
@@ -794,11 +821,11 @@ function simplify(t) {
            year: (t.album?.release_date || '').slice(0, 4), artistId: t.artists[0]?.id || '', explicit: !!t.explicit,
            isrc: t.external_ids?.isrc || '', al: t.artists.map(a => norm(a.name)).filter(Boolean) };
 }
-function accept(t, why, src = 'search') {
+function accept(t, why, src = 'search', extra) {
   if (!t || !t.id || t.is_playable === false || !t.artists) return false;
   if (JUNK.test(t.name) || JUNK.test(t.album?.name || '')) return false;
   if (src !== 'seed' && (ALT_TAKE.test(t.name) || t.album?.album_type === 'compilation')) return false;
-  return acceptS(Object.assign(simplify(t), { src }), why);
+  return acceptS(Object.assign(simplify(t), { src }, extra || {}), why);
 }
 // The same song often exists several times on Spotify (single, album, remaster, "feat." credits),
 // so "already seen" means: same title (ignoring brackets and " - Remastered") and any artist in common.
@@ -818,9 +845,10 @@ function acceptS(s, why) { // s is an already-simplified song
   const k = key(s.name, s.artist0);
   if (seenSet.has(s.id) || seenSet.has(k) || dupSeen(s)) return false;
   if (inQueue(s)) return false;
-  const c = Object.assign({}, s); delete c.from; delete c.srcId;
+  const c = Object.assign({}, s); delete c.from;
   if (why) c.why = why;
-  buffer.push(c);
+  // drop it in at a random spot so one search's ten results don't all come up in a row
+  buffer.splice(Math.floor(Math.random() * (buffer.length + 1)), 0, c);
   return true;
 }
 function markSeen(t) { seenSet.add(t.id); seenSet.add(key(t.name, t.artist0)); addTitle(norm(t.name), artistsOf(t)); state.seen.push(t.id, key(t.name, t.artist0)); }
@@ -1043,6 +1071,12 @@ function tempoFit(c, g) {
 /* ========================= is this song a good fit? ========================= */
 function targetGenres() {
   const w = new Set();
+  if (focusKind() === 'tag') return [...(TAGS[focusKey()]?.g || [])];
+  if (focusKind() === 'ev') {
+    (EVENT_GENRES[focusKey()] || []).forEach(x => w.add(x));
+    if (focusKey() === 'custom') customWords().forEach(x => w.add(x));
+    return [...w];
+  }
   // once you've picked genres, searches have to match those (not just the event's broad mix)
   if (!state.include.length) state.events.forEach(k => (EVENT_GENRES[k] || []).forEach(x => w.add(x)));
   if (state.events.includes('custom')) customWords().forEach(x => w.add(x));
@@ -1065,7 +1099,11 @@ async function vet(c) {
   // a song that matches a genre you picked is kept even if it also touches a left-out one
   // (e.g. "indie R&B" when you picked Modern R&B but not Indie)
   const picked = state.include.some(k => TAGS[k] && tagHit(TAGS[k], g, c.year));
-  if (!picked && state.exclude.some(k => TAGS[k] && tagHit(TAGS[k], g, c.year))) return 'excluded';
+  // songs from an attached playlist skip the automatic "genres you didn't pick" list — you added them on purpose
+  const exList = c.src === 'source' && state.excludeAuto ? state.exclude.filter(k => TAGS[k]?.custom) : state.exclude;
+  if (!picked && exList.some(k => TAGS[k] && tagHit(TAGS[k], g, c.year))) return 'excluded';
+  if (focusKind() === 'tag') { const t = TAGS[focusKey()]; if (t && (g.length ? !tagHit(t, g, c.year) : c.tag !== focusKey())) return 'off-focus'; }
+  if (focusKind() === 'src' && !(c.src === 'source' && c.srcId === focusKey())) return 'off-focus';
   // searches can surface very obscure uploads; Deezer's rank says how widely a song is played
   if (['search', 'tag', 'region'].includes(c.src) && c.rank && c.rank < 60000) return 'obscure';
   const tf = tempoFit(c, g); if (tf) return tf;
@@ -1145,17 +1183,24 @@ function blockedArtists(extra) {
   state.picks.forEach(p => { const a = norm(p.artist0); n[a] = (n[a] || 0) + 1; if (n[a] >= ARTIST_CAP) s.add(a); });
   return s;
 }
-function pickNext(extra) {
+function pickNext(extra, extraWhys = []) {
   if (!buffer.length) return null;
   const blocked = blockedArtists(extra);
   const open = buffer.slice(0, 16).map((c, i) => [c, i]).filter(([c]) => !artistsOf(c).some(a => blocked.has(a)));
   if (!open.length) return null;
-  if (!matching() && !state.include.length) return buffer.splice(open[0][1], 1)[0];
+  if (!matching() && !state.include.length && !state.sources.length) return buffer.splice(open[0][1], 1)[0];
+  // mix it up: avoid the same source (genre, playlist, "Like X") as the last couple of cards
+  const recent = state.history.slice(-2).map(x => x.track.why || x.track.src).concat(ready.slice(-3).map(x => x.why || x.src), extraWhys);
   const pr = profile(); let best = open[0][1], bs = -Infinity;
-  open.forEach(([c, i]) => { const s = score(c, pr); if (s > bs) { bs = s; best = i; } });
+  open.forEach(([c, i]) => {
+    const tag = c.why || c.src, rep = recent.filter(x => x === tag).length;
+    const s = score(c, pr) - rep * 0.7;
+    if (s > bs) { bs = s; best = i; }
+  });
   return buffer.splice(best, 1)[0];
 }
-const poolExhausted = () => !seedQueue.length && !queryQueue.length && !tagQueue.length && !sourceQueue.length && !buffer.length && !(matching() && tasteQueue.length);
+const tasteOn = () => matching() && !state.focus;
+const poolExhausted = () => !seedQueue.length && !queryQueue.length && !tagQueue.length && !sourceQueue.length && !buffer.length && !(tasteOn() && tasteQueue.length);
 async function runQuery(queue) {
   const q = queue.shift();
   if (q.lookup) { // custom vibe: is it an artist?
@@ -1170,18 +1215,24 @@ async function runQuery(queue) {
     } catch (e) { console.warn(e); }
     return;
   }
-  const j = await api(`/search?type=track&market=from_token&limit=10&offset=${q.offset}&q=${encodeURIComponent(q.q)}`);
-  const items = j?.tracks?.items || []; let took = 0;
-  const src = q.src || (q.tag ? 'tag' : 'search');
-  for (const t of shuffle(items)) {
-    if (q.perCall && took >= q.perCall) break;
-    if (q.artist && !t.artists?.some(a => norm(a.name) === norm(q.artist))) continue; // only that artist's own songs
-    const before = buffer.length;
-    if (accept(t, q.why, src)) { took++; if (q.tag) buffer[before].tag = q.tag; }
+  // Each search hands over a few songs per turn and keeps the rest for its next turn, so
+  // genres, playlists and suggestions take turns instead of one search filling the queue.
+  let fresh = false;
+  if (!q.left || !q.left.length) {
+    const j = await api(`/search?type=track&market=from_token&limit=10&offset=${q.offset}&q=${encodeURIComponent(q.q)}`);
+    const items = j?.tracks?.items || [];
+    q.left = shuffle(items); q.offset += 10; fresh = true;
+    q.more = items.length === 10 && q.offset < (q.max || 60); // stay near the top of results — deeper pages get obscure fast
   }
-  q.offset += 10;
-  // stay near the top of results — deeper pages get obscure fast
-  if (items.length === 10 && q.offset < (q.max || 60)) queue.push(q);
+  const src = q.src || (q.tag ? 'tag' : 'search'), per = q.perCall || 3;
+  let took = 0;
+  while (q.left.length && took < per) {
+    const t = q.left.shift();
+    if (q.artist && !t.artists?.some(a => norm(a.name) === norm(q.artist))) continue; // only that artist's own songs
+    if (accept(t, q.why, src, q.tag ? { tag: q.tag } : null)) took++;
+  }
+  if (q.artist && fresh) q.left = q.left.slice(0, 4); // "Like X": a couple of their songs per page is plenty
+  if (q.left.length || q.more) queue.push(q);
 }
 function fillBuffer(min = 6) {
   if (filling) return filling;
@@ -1190,15 +1241,15 @@ function fillBuffer(min = 6) {
       let guard = 0;
       const base = () => seedQueue.length || queryQueue.length;
       while (buffer.length < min && guard++ < 40 &&
-             (base() || tagQueue.length || sourceQueue.length || (matching() && tasteQueue.length))) {
-        if (matching() && (tasteAt < 0 || state.picks.length - tasteAt >= 3)) rebuildTaste();
+             (base() || tagQueue.length || sourceQueue.length || (tasteOn() && tasteQueue.length))) {
+        if (tasteOn() && (tasteAt < 0 || state.picks.length - tasteAt >= 3)) rebuildTaste();
         const r = Math.random();
         // songs from your imported playlist (~20%)
         if (sourceQueue.length && (r < 0.2 || !(base() || tagQueue.length))) {
           const s = sourceQueue.shift(); acceptS(Object.assign({}, s, { src: 'source' }), `From “${s.from}”`); continue;
         }
         // taste searches based on your picks / playlist (~35%)
-        if (matching() && tasteQueue.length && (r < 0.55 || !(base() || tagQueue.length))) { await runQuery(tasteQueue); continue; }
+        if (tasteOn() && tasteQueue.length && (r < 0.55 || !(base() || tagQueue.length))) { await runQuery(tasteQueue); continue; }
         // genres, eras and places you chose (~25%)
         if (tagQueue.length && (r < 0.8 || !base())) { await runQuery(tagQueue); continue; }
         // event lists: mostly hand-picked songs, with some search variety
@@ -1231,8 +1282,8 @@ function fillBuffer(min = 6) {
 // Since Feb 2026 Spotify only lets development apps read playlists you own or collaborate on.
 let meId = null;
 const nextPath = u => u ? u.replace('https://api.spotify.com/v1', '') : null;
-async function openPicker() {
-  $('#sheet').hidden = false; $('#srcLink').value = '';
+async function openPicker(highlight) {
+  $('#sheet').hidden = false; $('#srcLink').value = ''; $('#sheetTitle').textContent = 'Add a playlist';
   const body = $('#sheetBody');
   body.innerHTML = '<div class="sheetNote"><div class="spin"></div>Loading your playlists…</div>';
   try {
@@ -1241,43 +1292,151 @@ async function openPicker() {
     for (let i = 0; i < 4 && url; i++) { const j = await api(url); all = all.concat((j.items || []).filter(Boolean)); url = nextPath(j.next); }
     const ok = p => p.owner?.id === meId || p.collaborative;
     const count = p => p.items?.total ?? p.tracks?.total ?? '';
-    const row = (p, on) => `<button class="pick" ${on ? '' : 'disabled'} data-src="${esc(p.id)}" data-name="${esc(p.name)}">
+    const hl = p => highlight && ok(p) && norm(p.name) === norm(highlight);
+    const row = (p, mine) => `<button class="pick" data-${mine ? 'src' : 'other'}="${esc(p.id)}" data-name="${esc(p.name)}">
         ${p.images?.[0]?.url ? `<img src="${esc(p.images[0].url)}" alt="">` : '<div class="ph"></div>'}
-        <div class="t"><b>${esc(p.name)}</b><span>${count(p) !== '' ? count(p) + ' songs' : ''}${state.sources.some(s => s.id === p.id) ? ' · added' : ''}</span></div></button>`;
-    const mine = all.filter(ok), other = all.filter(p => !ok(p));
-    body.innerHTML = (mine.length ? mine.map(p => row(p, true)).join('') : '<div class="sheetNote">No playlists of your own yet.</div>')
-      + (other.length ? `<div class="sheetNote">Followed playlists — Spotify only lets this app read playlists you created or collaborate on. Tip: in Spotify, add its songs to a new playlist of your own.</div>${other.map(p => row(p, false)).join('')}` : '');
+        <div class="t"><b>${esc(p.name)}</b><span>${hl(p) ? '<span class="mark">← your copy · </span>' : ''}${count(p) !== '' ? count(p) + ' songs' : ''}${mine ? '' : ` · by ${esc(p.owner?.display_name || 'someone else')}`}${state.sources.some(s => s.id === p.id) ? ' · added' : ''}</span></div></button>`;
+    const mine = all.filter(ok).sort((a, b) => hl(b) - hl(a)), other = all.filter(p => !ok(p));
+    body.innerHTML = `<button class="pick" id="btnPasteOpen"><div class="ph" style="display:grid;place-items:center">📋</div><div class="t"><b>Paste a list of songs</b><span>Song links, or “Artist – Title” lines — from anyone's playlist</span></div></button>`
+      + `<div class="sheetNote">Your playlists</div>`
+      + (mine.length ? mine.map(p => row(p, true)).join('') : '<div class="sheetNote">No playlists of your own yet.</div>')
+      + (other.length ? `<div class="sheetNote">Playlists you follow (made by others) — tap one to see how to add it</div>${other.map(p => row(p, false)).join('')}` : '')
+      + `<div class="sheetNote">Got a friend's link? Paste it below.</div>`;
   } catch (e) { body.innerHTML = `<div class="sheetNote">Couldn't load playlists: ${esc(e.message)}</div>`; }
+}
+const MAX_SOURCE_SONGS = 1000;
+function attachSongs(id, name, songs) {
+  songs = songs.filter((s, i) => songs.findIndex(x => sameSong(x, s)) === i).map(s => Object.assign(s, { from: name, srcId: id }));
+  state.sources.push({ id, name, n: songs.length });
+  state.sourceTracks = state.sourceTracks.concat(songs).slice(-MAX_SOURCE_SONGS);
+  tasteAt = -1; save(); renderSources(); updateIncNext();
+  $('#sheet').hidden = true;
+  toast(`Added ${songs.length} songs from “${name}”`);
+  // learn the genres of its main artists in the background
+  const counts = {}; songs.forEach(s => counts[s.artistId] = (counts[s.artistId] || 0) + 1);
+  Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 12).forEach(([artistId]) => learnArtist({ artistId }));
+  // added while swiping: jump straight to its songs
+  if ($('#s-swipe').classList.contains('on')) { renderFocusBar(); setFocus('src:' + id); }
 }
 async function addSource(id, name) {
   if (state.sources.some(s => s.id === id)) return toast('That playlist is already added');
   toast('Reading playlist…', 6000);
+  let raw = [], blocked = false;
   try {
-    const raw = []; let url = `/playlists/${id}/items?limit=50`;
-    for (let i = 0; i < 6 && url; i++) {
+    let url = `/playlists/${id}/items?limit=50`;
+    for (let i = 0; i < 20 && url; i++) {
       const j = await api(url);
       (j.items || []).forEach(it => { const t = it?.item || it?.track; if (t && t.id && t.artists && t.type !== 'episode') raw.push(t); });
       url = nextPath(j.next);
     }
-    if (!raw.length) return toast('That playlist has no songs this app can read');
-    if (!name) { try { name = (await api(`/playlists/${id}`)).name; } catch { name = 'Spotify playlist'; } }
-    const songs = raw.map(t => Object.assign(simplify(t), { from: name, srcId: id }));
-    state.sources.push({ id, name, n: songs.length });
-    state.sourceTracks = state.sourceTracks.concat(songs).slice(-400);
-    tasteAt = -1; save(); renderSources(); updateIncNext();
-    $('#sheet').hidden = true;
-    toast(`Added ${songs.length} songs from “${name}”`);
-    // learn the genres of its main artists in the background
-    const counts = {}; songs.forEach(s => counts[s.artistId] = (counts[s.artistId] || 0) + 1);
-    Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 12).forEach(([artistId]) => learnArtist({ artistId }));
   } catch (e) {
-    toast(e.status === 403 || e.status === 404
-      ? 'Spotify only lets this app read playlists you created or collaborate on'
-      : 'Couldn\'t read that playlist: ' + e.message, 5000);
+    if (e.status === 403 || e.status === 404) blocked = true;
+    else return toast('Couldn\'t read that playlist: ' + e.message, 5000);
   }
+  let meta = null;
+  if (!name || blocked || !raw.length) { try { meta = await api(`/playlists/${id}`); name = name || meta?.name; } catch {} }
+  name = name || 'Spotify playlist';
+  if (blocked || !raw.length) {
+    // someone else's playlist: Spotify won't hand its songs to apps like this one
+    if (!meta && blocked) return toast('Couldn\'t find that playlist — check the link', 5000);
+    if (!meId) { try { meId = (await api('/me')).id; } catch {} }
+    if (meta && meta.owner?.id !== meId && !meta.collaborative) return showOthersHelp(id, name, meta.owner?.display_name);
+    return toast('That playlist has no songs this app can read');
+  }
+  attachSongs(id, name, raw.map(simplify));
+}
+async function addAlbum(id) {
+  if (state.sources.some(s => s.id === 'album:' + id)) return toast('That album is already added');
+  try {
+    toast('Reading album…', 6000);
+    const a = await api(`/albums/${id}`);
+    const album = { name: a.name, images: a.images, release_date: a.release_date, album_type: a.album_type };
+    const songs = (a.tracks?.items || []).filter(t => t && t.id).map(t => simplify(Object.assign({}, t, { album })));
+    if (!songs.length) return toast('That album has no songs this app can read');
+    attachSongs('album:' + id, a.name + ' (album)', songs);
+  } catch (e) { toast('Couldn\'t read that album: ' + e.message, 5000); }
+}
+function showOthersHelp(id, name, owner) {
+  $('#toast').classList.remove('on');
+  $('#sheet').hidden = false; $('#sheetTitle').textContent = 'Someone else\'s playlist';
+  $('#sheetBody').innerHTML = `<div class="helpCard">
+    <b>“${esc(name)}”${owner ? ` is by ${esc(owner)}` : ' was made by someone else'}</b>
+    <p>Spotify only lets apps like this read playlists you made or collaborate on. Any of these works:</p>
+    <div class="opt"><b>1. Save a copy — easiest, on your phone</b>
+      <p>In Spotify, open the playlist → tap <b>⋯</b> → <b>Add to other playlist</b> → <b>New playlist</b>. Then come back here and tap your copy.</p>
+      <div class="row2"><a class="btn ghost" href="https://open.spotify.com/playlist/${esc(id)}" target="_blank" rel="noopener">Open in Spotify</a>
+        <button class="btn primary" id="btnMadeCopy">I made a copy ↻</button></div></div>
+    <div class="opt"><b>2. Paste its songs</b>
+      <p>On a computer: open it in Spotify, click a song, press Ctrl+A (⌘A on Mac) then Ctrl+C (⌘C), and paste. You can also type songs as “Artist – Title”.</p>
+      <button class="btn ghost wide" id="btnToPaste">Paste songs</button></div>
+    <div class="opt"><b>3. Ask ${owner ? esc(owner) : 'them'} to invite you as a collaborator</b>
+      <p>In Spotify: ⋯ → <b>Invite collaborators</b>. Once you've joined, it appears under your playlists.</p></div>
+  </div>`;
+  $('#btnMadeCopy').onclick = () => openPicker(name);
+  $('#btnToPaste').onclick = () => showPaste(name);
+}
+function showPaste(name) {
+  $('#sheet').hidden = false; $('#sheetTitle').textContent = 'Paste a list of songs';
+  $('#sheetBody').innerHTML = `<div class="pastePanel">
+    <label class="f" for="pasteName">Name</label>
+    <input class="text" id="pasteName" value="${esc(name || '')}" placeholder="e.g. Marina's road-trip mix">
+    <label class="f" for="pasteText">Songs</label>
+    <textarea class="text" id="pasteText" placeholder="https://open.spotify.com/track/…&#10;Stevie Wonder – Superstition&#10;Mr. Brightside by The Killers"></textarea>
+    <p class="hint">Paste Spotify song links, one per line — on a computer, select all songs in a playlist (Ctrl/⌘+A) and copy (Ctrl/⌘+C). Or type songs as “Artist – Title” or “Title by Artist”.</p>
+    <button class="btn primary wide" id="btnPasteGo">Add songs</button>
+    <p class="hint" id="pasteProg"></p>
+    <button class="linkbtn" id="btnPasteBack">← Back to playlists</button>
+  </div>`;
+  $('#btnPasteBack').onclick = () => openPicker();
+  $('#btnPasteGo').onclick = importPasted;
+  setTimeout(() => $('#pasteText').focus(), 50);
+}
+async function runLimited(items, n, fn) {
+  let i = 0;
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => { while (i < items.length) { const k = i++; await fn(items[k], k); } }));
+}
+function splitLine(l) {
+  l = l.replace(/^\s*\d+[.)]\s*/, '').replace(/\s+/g, ' ').trim();
+  const by = l.match(/^(.+?)\s+by\s+(.+)$/i);
+  if (by) return [by[2], by[1]];                      // "Title by Artist" → [artist, title]
+  const p = l.split(/\s+[-–—]\s+|\t/);
+  return p.length >= 2 ? [p[0], p.slice(1).join(' ')] : [l];
+}
+async function findSong(line) {
+  const parts = splitLine(line);
+  const j = await api(`/search?type=track&limit=5&q=${encodeURIComponent(parts.join(' '))}`);
+  const items = (j?.tracks?.items || []).filter(t => t && t.id && !JUNK.test(t.name));
+  const hasArtist = (t, x) => t.artists.some(a => { const n = norm(a.name); return n && (n === x || n.includes(x) || x.includes(n)); });
+  if (parts.length === 2) {
+    const [a, b] = parts.map(norm); // either order: "Artist – Title" or "Title – Artist"
+    return items.find(t => (norm(t.name).startsWith(b) && hasArtist(t, a)) || (norm(t.name).startsWith(a) && hasArtist(t, b))) || null;
+  }
+  return items.find(t => norm(t.name) === norm(parts[0])) || null;
+}
+async function importPasted() {
+  const text = $('#pasteText').value, name = $('#pasteName').value.trim() || 'Pasted songs';
+  const lines = text.split(/[\n\r]+|\s+(?=https?:\/\/)/).map(s => s.trim()).filter(Boolean).slice(0, 400);
+  const pl = text.match(/playlist[/:]([A-Za-z0-9]{22})/), al = text.match(/album[/:]([A-Za-z0-9]{22})/);
+  const ids = [...new Set(lines.map(l => (l.match(/track[/:]([A-Za-z0-9]{22})/) || [])[1]).filter(Boolean))];
+  const words = lines.filter(l => !/^(https?:|spotify:)/i.test(l));
+  if (!ids.length && !words.length) {
+    if (pl) return addSource(pl[1]);
+    if (al) return addAlbum(al[1]);
+    return toast('Paste some song links or song names first');
+  }
+  const btn = $('#btnPasteGo'); btn.disabled = true;
+  const songs = [], missed = []; let done = 0; const total = ids.length + words.length;
+  const prog = () => { $('#pasteProg').textContent = `Finding songs… ${done} of ${total}`; };
+  prog();
+  await runLimited(ids, 5, async id => { try { const t = await api(`/tracks/${id}`); if (t?.id) songs.push(simplify(t)); } catch {} done++; prog(); });
+  await runLimited(words.slice(0, 200), 3, async l => { try { const t = await findSong(l); t ? songs.push(simplify(t)) : missed.push(l); } catch { missed.push(l); } done++; prog(); });
+  btn.disabled = false;
+  if (!songs.length) { $('#pasteProg').textContent = 'Couldn\'t find any of those songs on Spotify — try “Artist – Title”, one per line.'; return; }
+  attachSongs('paste-' + Date.now().toString(36), name, songs);
+  if (missed.length) setTimeout(() => toast(`Added ${songs.length} songs · couldn't find ${missed.length}: ${missed.slice(0, 3).join(', ')}${missed.length > 3 ? '…' : ''}`, 6000), 300);
 }
 function renderSources() {
-  $('#srcList').innerHTML = state.sources.map(s => `<div class="src"><span>🎧</span><b>${esc(s.name)}</b><span>${s.n} songs</span>
+  $('#srcList').innerHTML = state.sources.map(s => `<div class="src"><span>${String(s.id).startsWith('album:') ? '💿' : String(s.id).startsWith('paste-') ? '📋' : '🎧'}</span><b>${esc(s.name)}</b><span>${s.n} songs</span>
       <button data-unsrc="${esc(s.id)}" aria-label="Remove">✕</button></div>`).join('');
   $('#srcCardsWrap').style.display = state.sources.length ? 'flex' : 'none';
   $('#srcCards').checked = state.sourceCards;
@@ -1492,10 +1651,10 @@ function pump() {
       while (ready.length < READY_TARGET && rounds++ < 30) {
         if (buffer.length < 3) await fillBuffer(9);
         if (!buffer.length) break;
-        const batch = [], batchArtists = new Set();
+        const batch = [], batchArtists = new Set(), batchWhys = [];
         while (batch.length < 3) {
-          const c = pickNext(batchArtists); if (!c) break;
-          batch.push(c); artistsOf(c).forEach(a => batchArtists.add(a));
+          const c = pickNext(batchArtists, batchWhys); if (!c) break;
+          batch.push(c); artistsOf(c).forEach(a => batchArtists.add(a)); batchWhys.push(c.why || c.src);
         }
         if (!batch.length) {
           // everything waiting is by artists you just heard — find more songs, or as a last resort
@@ -1504,7 +1663,9 @@ function pump() {
           batch.push(buffer.shift());
         }
         stuck = 0;
+        const sig = vetSig();
         const res = await Promise.all(batch.map(c => vet(c).catch(e => { console.warn(e); return ''; })));
+        if (sig !== vetSig()) continue; // focus or filters changed while checking — these were for the old mix
         batch.forEach((c, i) => {
           pumpStats.checked++;
           if (res[i]) { skipSong(c); pumpStats.skipped++; const r = res[i].split(':')[0]; pumpStats.why[r] = (pumpStats.why[r] || 0) + 1; }
@@ -1531,6 +1692,7 @@ async function nextCard() {
     const tip = w['unknown-origin'] > 3 && !state.allowUnknownOrigin ? 'Tip: turn on “Allow songs if we can’t tell where they’re from” in ⚙︎.'
       : (w.slow > 5 && tempoMode() === 'dance') ? 'Tip: set Tempo to “Any tempo” in ⚙︎ for more songs.'
       : (w.fast > 5 && tempoMode() === 'chill') ? 'Tip: set Tempo to “Any tempo” in ⚙︎ for more songs.' : '';
+    if (state.focus) return deckMessage(`That's every ${esc(focusLabel())} song for now.<br><br><button class="btn primary" onclick="setFocus('')">Back to all</button>`);
     if (poolExhausted()) { stopClip(); save(); toast('That\'s every song for these choices — review your picks. ' + tip, 5000); return go('review'); }
     return deckMessage(`Couldn't find more songs that fit.${tip ? '<br><br>' + tip : ''}<br><br><button class="btn ghost" onclick="nextCard()">Try again</button>`);
   }
@@ -1542,6 +1704,42 @@ async function nextCard() {
   renderCard(current);
   playClip(current);
   pump(); // top the queue back up in the background
+}
+
+/* ========================= focus bar ========================= */
+function focusOptions() {
+  const o = [];
+  state.events.filter(k => EVENTS[k] && (k !== 'custom' || state.custom)).forEach(k =>
+    o.push({ f: 'ev:' + k, label: k === 'custom' ? `“${state.custom}”` : EVENTS[k].label.replace(/ \(.*\)$/, ''), icon: EVENTS[k].emoji }));
+  state.include.filter(k => TAGS[k]).forEach(k => o.push({ f: 'tag:' + k, label: TAGS[k].label, icon: '' }));
+  state.sources.forEach(s => o.push({ f: 'src:' + s.id, label: s.name, icon: '🎧' }));
+  return o;
+}
+function focusLabel() { const o = focusOptions().find(x => x.f === state.focus); return o ? o.label : 'matching'; }
+function renderFocusBar() {
+  const opts = focusOptions();
+  if (state.focus && !opts.some(o => o.f === state.focus)) state.focus = ''; // that genre or playlist was removed
+  $('#focusBar').innerHTML = `<span class="lbl">Focus</span><button class="fchip ${state.focus ? '' : 'on'}" data-focus="">All</button>` +
+    opts.map(o => `<button class="fchip ${state.focus === o.f ? 'on' : ''}" data-focus="${esc(o.f)}" title="${esc(o.label)}">${o.icon ? o.icon + ' ' : ''}${esc(o.label)}</button>`).join('') +
+    `<button class="fchip add" id="focusAdd">＋ Playlist</button>`;
+  const on = $('#focusBar .fchip.on'); if (on) on.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+}
+// Each focus keeps its own queue of ready songs, so switching back and forth is instant
+const readyStash = {};
+function setFocus(f) {
+  if ((state.focus || '') === f) return;
+  stopClip();
+  if (current) { ready.unshift(current); current = null; }
+  readyStash[state.focus || '*'] = ready.slice();
+  state.focus = f;
+  buildPool();
+  ready = (readyStash[f || '*'] || []).filter(t => !dupSeen(t));
+  readyKey = vetSig(); persistReady();
+  pumpStats = { checked: 0, skipped: 0, why: {} };
+  renderFocusBar();
+  if (f) toast(`Focus: ${focusLabel()} · tap All to mix again`);
+  deckMessage(`<div class="spin"></div>Finding ${esc(f ? focusLabel() : 'all')} songs…`);
+  nextCard();
 }
 
 /* ========================= loading screen ========================= */
@@ -1784,6 +1982,7 @@ function newList() { stopClip(); state = freshState(); resetPool(); go('title');
 /* ========================= navigation & wiring ========================= */
 function go(stage, persist = true) {
   if (stage !== 'swipe') stopClip();
+  document.body.classList.toggle('swiping', stage === 'swipe');
   $$('.screen').forEach(s => s.classList.toggle('on', s.id === 's-' + stage));
   if (persist && !['connect', 'home', 'loading'].includes(stage)) { state.stage = stage; save(); }
   if (stage !== 'loading') { loadSeq++; pumpProgress = null; }
@@ -1795,7 +1994,7 @@ function go(stage, persist = true) {
   if (stage === 'exclude') renderExclude();
   if (stage === 'review') renderReview();
   if (stage === 'swipe') {
-    updateProgress(); updateMatchBtn(); updateVolUi();
+    updateProgress(); updateMatchBtn(); updateVolUi(); renderFocusBar();
     const sigBefore = readyKey;
     preparePool();
     if (current && sigBefore === readyKey) { renderCard(current); playClip(current); }
@@ -1965,21 +2164,31 @@ $('#btnPickSrc').onclick = openPicker;
 $('#sheetX').onclick = () => { $('#sheet').hidden = true; };
 $('#sheet').addEventListener('click', e => {
   if (e.target.id === 'sheet') $('#sheet').hidden = true;
+  if (e.target.closest('#btnPasteOpen')) return showPaste();
+  const o = e.target.closest('[data-other]'); if (o) return addSource(o.dataset.other, o.dataset.name);
   const p = e.target.closest('[data-src]'); if (p) addSource(p.dataset.src, p.dataset.name);
 });
 $('#btnSrcLink').onclick = () => {
-  const v = $('#srcLink').value.trim(), m = v.match(/playlist[/:]([A-Za-z0-9]{10,})/) || v.match(/^([A-Za-z0-9]{22})$/);
-  if (!m) return toast('Paste a Spotify playlist link (open.spotify.com/playlist/…)');
+  const v = $('#srcLink').value.trim();
+  const al = v.match(/album[/:]([A-Za-z0-9]{22})/); if (al) return addAlbum(al[1]);
+  const tr = v.match(/track[/:]([A-Za-z0-9]{22})/); if (tr) { showPaste(); $('#pasteText').value = v; return; }
+  const m = v.match(/playlist[/:]([A-Za-z0-9]{10,})/) || v.match(/^([A-Za-z0-9]{22})$/);
+  if (!m) return toast('Paste a Spotify playlist or album link (open.spotify.com/…)');
   addSource(m[1]);
 };
 $('#srcList').addEventListener('click', e => {
   const b = e.target.closest('[data-unsrc]'); if (!b) return;
   state.sources = state.sources.filter(s => s.id !== b.dataset.unsrc);
+  if (state.focus === 'src:' + b.dataset.unsrc) state.focus = '';
   state.sourceTracks = state.sourceTracks.filter(t => t.srcId !== b.dataset.unsrc);
   tasteAt = -1; save(); renderSources(); updateIncNext();
 });
 $('#srcCards').onchange = e => { state.sourceCards = e.target.checked; save(); };
 $('#btnFilters').onclick = () => go('event');
+$('#focusBar').addEventListener('click', e => {
+  if (e.target.closest('#focusAdd')) return openPicker();
+  const b = e.target.closest('[data-focus]'); if (b) setFocus(b.dataset.focus);
+});
 $('#btnStart').onclick = () => { player?.activateElement?.(); startSession(); };
 $('#ldBack').onclick = () => go('event');
 $('#tempoTags').addEventListener('click', e => {
