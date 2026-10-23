@@ -399,6 +399,7 @@ ul.tracks .rm:hover{background:var(--panel2);color:var(--pink)}
       <span id="volVal"></span>
     </div>
     <p class="hint volHint" id="volHint" hidden></p>
+    <p class="hint volHint"><button class="linkbtn" id="btnSoundCheck">No sound? Run a sound check</button></p>
     <div class="keys">← pass · → add · space replay · Z undo</div>
   </section>
 
@@ -1283,7 +1284,7 @@ function fillBuffer(min = 6) {
 let meId = null;
 const nextPath = u => u ? u.replace('https://api.spotify.com/v1', '') : null;
 async function openPicker(highlight) {
-  $('#sheet').hidden = false; $('#srcLink').value = ''; $('#sheetTitle').textContent = 'Add a playlist';
+  $('#sheet').hidden = false; $('#srcLink').value = ''; $('#sheetTitle').textContent = 'Add a playlist'; $('.sheetFt').style.display = '';
   const body = $('#sheetBody');
   body.innerHTML = '<div class="sheetNote"><div class="spin"></div>Loading your playlists…</div>';
   try {
@@ -1473,13 +1474,56 @@ function initPlayer() {
   })();
   return playerInit;
 }
+// What the sound check shows
+const diag = { devices: [], lastPlay: '—', state: '—', at: '' };
+let deviceList = [];
 async function findDevice() {
   const j = await api('/me/player/devices');
-  const ds = (j?.devices || []).filter(d => !d.is_restricted);
-  const d = ds.find(d => d.is_active) || ds.find(d => d.type === 'Smartphone') || ds[0] || null;
-  connectDevice = d ? { id: d.id, name: d.name, canVolume: d.supports_volume !== false } : null;
+  deviceList = (j?.devices || []).filter(d => d && d.id && !d.is_restricted);
+  diag.devices = deviceList.map(d => `${d.name} (${d.type}${d.is_active ? ', active' : ''})`);
+  // Prefer the phone in your hand — not a laptop or speaker where Spotify also happens to be open
+  const saved = LS.get('pc_device', ''), phone = d => d.type === 'Smartphone';
+  const d = deviceList.find(d => d.id === saved) || deviceList.find(d => phone(d) && d.is_active) || deviceList.find(phone)
+         || deviceList.find(d => d.is_active) || deviceList[0] || null;
+  connectDevice = d ? { id: d.id, name: d.name, type: d.type, canVolume: d.supports_volume !== false } : null;
   updateVolUi();
   return connectDevice;
+}
+
+/* ========================= sound check ========================= */
+const modeLabel = () => playbackMode === 'connect' ? 'Spotify app (remote control)' : playbackMode === 'sdk' ? 'In this browser tab' : 'Preview player in the page';
+async function openSoundCheck() {
+  $('#sheet').hidden = false; $('#sheetTitle').textContent = 'Sound check'; $('.sheetFt').style.display = 'none';
+  const body = $('#sheetBody');
+  body.innerHTML = '<div class="sheetNote"><div class="spin"></div>Checking Spotify…</div>';
+  let st = '—';
+  try { await initPlayer(); if (playbackMode === 'connect') await findDevice(); } catch (e) { diag.devices = ['Error: ' + e.message]; }
+  try { const s = await api('/me/player'); st = s ? `${s.is_playing ? 'Playing' : 'Paused'} “${s.item?.name || '—'}” on ${s.device?.name || '?'}` : 'Nothing playing on any device'; } catch (e) { st = 'Error ' + (e.status || e.message); }
+  const report = [`Mode: ${modeLabel()}`, `Phone detected: ${IS_MOBILE ? 'yes' : 'no'}`, `Devices: ${diag.devices.join('; ') || 'none found'}`,
+    `Using: ${connectDevice ? connectDevice.name + ' (' + connectDevice.type + ')' : '—'}`, `Last play (${diag.at || '—'}): ${diag.lastPlay}`,
+    `Check after play: ${diag.state}`, `Right now: ${st}`].join('\n');
+  const devRows = playbackMode === 'connect' ? (deviceList.length ? deviceList.map(d => `<button class="pick" data-dev="${esc(d.id)}">
+      <div class="ph" style="display:grid;place-items:center">${d.type === 'Smartphone' ? '📱' : d.type === 'Computer' ? '💻' : '🔊'}</div>
+      <div class="t"><b>${esc(d.name)}</b><span>${esc(d.type)}${d.is_active ? ' · active' : ''}${connectDevice?.id === d.id ? ' · <span class="mark">clips play here</span>' : ''}</span></div></button>`).join('')
+      : '<div class="sheetNote">Spotify isn\'t open on any device. Open the Spotify app on this phone, play any song for a second, then come back and tap Check again.</div>') : '';
+  body.innerHTML = `<div class="helpCard">
+    ${playbackMode === 'connect' ? `<b>Where clips play</b><p>Tap the device you want clips on — usually this phone.</p>${devRows}` : `<b>${esc(modeLabel())}</b>`}
+    <div class="opt"><b>What happened</b><pre id="scReport" style="white-space:pre-wrap;font-size:12.5px;margin:8px 0 0;color:#d6d6e0">${esc(report)}</pre></div>
+    <div class="row2"><button class="btn primary" id="scTest">▶ Play a test clip</button><button class="btn ghost" id="scAgain">↻ Check again</button></div>
+    <div class="row2" style="margin-top:8px"><button class="btn ghost" id="scCopy">Copy details</button>${playbackMode !== 'embed' ? '<button class="btn ghost" id="scEmbed">Use page previews</button>' : '<button class="btn ghost" id="scApp">Use Spotify app</button>'}</div>
+    <p style="margin-top:12px">Still silent? Check the phone isn't on silent/low volume, Spotify is logged into the same account, and the account has Premium.</p>
+  </div>`;
+  $('#scAgain').onclick = openSoundCheck;
+  $('#scCopy').onclick = () => { navigator.clipboard?.writeText(report).then(() => toast('Copied — paste it to whoever is helping you'), () => toast('Couldn\'t copy')); };
+  $('#scTest').onclick = async () => { $('#sheet').hidden = true; if (current) { renderCard(current); playClip(current); } else toast('Start swiping first, then run the test'); };
+  const em = $('#scEmbed'); if (em) em.onclick = () => { playbackMode = 'embed'; $('#sheet').hidden = true; if (current) { renderCard(current); playClip(current); } };
+  const ap = $('#scApp'); if (ap) ap.onclick = () => { playbackMode = IS_MOBILE ? 'connect' : 'sdk'; playerInit = null; $('#sheet').hidden = true; if (current) { renderCard(current); playClip(current); } };
+  body.querySelectorAll('[data-dev]').forEach(b => b.onclick = () => {
+    const d = deviceList.find(x => x.id === b.dataset.dev); if (!d) return;
+    LS.set('pc_device', d.id);
+    connectDevice = { id: d.id, name: d.name, type: d.type, canVolume: d.supports_volume !== false }; volSentTo = null; updateVolUi();
+    toast(`Clips will play on ${d.name}`); openSoundCheck();
+  });
 }
 
 /* ========================= volume ========================= */
@@ -1551,10 +1595,46 @@ async function startPlayback(t, seq) {
   await pendingPause; // make sure a pause for the previous song lands before the next play
   if (seq !== playSeq) return;
   if (playbackMode === 'connect' && connectDevice?.canVolume && volSentTo !== connectDevice.id) await sendVolume(); // first clip on this phone
-  await api(`/me/player/play?device_id=${activeDeviceId()}`, { method: 'PUT', body: JSON.stringify({ uris: [t.uri], position_ms: hookPos }) });
+  const id = activeDeviceId(), body = JSON.stringify({ uris: [t.uri], position_ms: hookPos });
+  diag.at = new Date().toLocaleTimeString();
+  try {
+    await api(`/me/player/play?device_id=${id}`, { method: 'PUT', body });
+    diag.lastPlay = `OK — sent “${t.name}” to ${connectDevice?.name || 'this browser'}`;
+  } catch (e) {
+    diag.lastPlay = `Error ${e.status || ''}: ${e.message}`;
+    if (playbackMode !== 'connect' || !(e.status === 404 || e.status === 502 || e.status === 503)) throw e;
+    // the phone's Spotify app is asleep: hand playback to it, then try again
+    await wakeDevice(id);
+    if (seq !== playSeq) return;
+    await api(`/me/player/play?device_id=${id}`, { method: 'PUT', body });
+    diag.lastPlay = `OK after waking ${connectDevice?.name || 'device'}`;
+  }
   if (seq !== playSeq) return;
+  if (playbackMode === 'connect') verifyPlaying(t, seq, id, body, false);
   clipStart = performance.now(); setPlaying(true); tick();
   clipTimer = setTimeout(() => { if (seq === playSeq) stopClip(); }, CLIP_MS);
+}
+async function wakeDevice(id) {
+  try { await api('/me/player', { method: 'PUT', body: JSON.stringify({ device_ids: [id], play: false }) }); } catch (e) { console.warn(e); }
+  await sleep(800);
+}
+// A suspended iPhone app can accept a play command and stay silent, so ask Spotify what's playing
+async function verifyPlaying(t, seq, id, body, retried) {
+  await sleep(1800);
+  if (seq !== playSeq) return;
+  let s = null;
+  try { s = await api('/me/player'); } catch (e) { diag.state = `Couldn't check (${e.status || e.message})`; return; }
+  diag.state = s ? `${s.is_playing ? 'Playing' : 'Paused'} “${s.item?.name || '—'}” on ${s.device?.name || '?'}` : 'Nothing playing — Spotify isn\'t active on any device';
+  if (seq !== playSeq) return;
+  if (s && s.is_playing && (!s.device?.id || s.device.id === id)) return; // all good
+  if (!retried) {
+    await wakeDevice(id);
+    if (seq !== playSeq) return;
+    try { await api(`/me/player/play?device_id=${id}`, { method: 'PUT', body }); } catch (e) { diag.lastPlay = `Retry error ${e.status || ''}: ${e.message}`; }
+    return verifyPlaying(t, seq, id, body, true);
+  }
+  stopClip(false);
+  showNoDevice(t, 'silent');
 }
 async function playClip(t, pos) {
   stopClip(false);
@@ -1590,15 +1670,19 @@ function showEmbed(t) {
   const lbl = $('#hookLbl'); if (lbl) lbl.remove();
   p.outerHTML = `<div class="embed"><iframe src="https://open.spotify.com/embed/track/${t.id}?theme=0" allow="autoplay; clipboard-write; encrypted-media" loading="lazy"></iframe></div>`;
 }
-function showNoDevice(t) {
+function showNoDevice(t, why) {
   waitingForDevice = true;
-  const p = document.querySelector('.card .player'); if (!p) return;
+  const p = document.querySelector('.card .player, .card .nodev'); if (!p) return;
   const lbl = $('#hookLbl'); if (lbl) lbl.textContent = '';
+  const msg = why === 'silent'
+    ? `<b>No sound from ${esc(connectDevice?.name || 'Spotify')}.</b> iPhones pause Spotify in the background — open it, play any song for a second, then come back.`
+    : '<b>Open Spotify to hear clips.</b> Play any song for a second, then come back here.';
   p.outerHTML = `<div class="nodev">
-      <p><b>Open Spotify to hear clips.</b> Play any song for a second, then come back here.</p>
+      <p>${msg}</p>
       <div class="nodevBtns"><a class="btn primary" href="spotify:">Open Spotify</a><button class="btn ghost" id="retryDev">I'm back ▶</button></div>
-      <button class="linkbtn" id="usePreview">Use Spotify's previews instead</button>
+      <button class="linkbtn" id="usePreview">Play previews in this page instead</button> · <button class="linkbtn" id="nodevCheck">Sound check</button>
     </div>`;
+  $('#nodevCheck').onclick = openSoundCheck;
   const retry = () => { waitingForDevice = false; renderCard(t); playClip(t); };
   $('#retryDev').onclick = retry;
   $('#usePreview').onclick = () => { playbackMode = 'embed'; retry(); };
@@ -2198,6 +2282,7 @@ $('#tempoTags').addEventListener('click', e => {
 $$('[data-go]').forEach(b => b.onclick = () => go(b.dataset.go));
 $('#vol').addEventListener('input', e => setVolume(+e.target.value));
 $('#vol').addEventListener('change', e => setVolume(+e.target.value, true));
+ $('#btnSoundCheck').onclick = openSoundCheck;
 $('#volMute').onclick = () => setVolume(volume ? 0 : lastVolume, true);
 $('#btnYes').onclick = () => decide('add');
 $('#btnNo').onclick = () => decide('pass');
