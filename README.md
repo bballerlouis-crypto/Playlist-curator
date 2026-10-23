@@ -78,7 +78,10 @@ Each Spotify app can list several Redirect URIs, so one Client ID can cover both
 - **What should come up?** Pick one or more event vibes and any number of genres or eras (Motown, 80s pop, Latin…). They're mixed together.
 - **Start from your Spotify playlist:** add one or more of your playlists. Their artists, genres and era steer suggestions from the first card, and their songs can also show up as cards (toggle). Spotify only lets this app read playlists you **created or collaborate on**. For one you just follow, add its songs to a new playlist of your own first.
 - **What shouldn't come up?** Tap genres or eras to keep out (e.g. 70s soul & funk), and optionally turn on **No explicit songs**. Matching songs are skipped silently. A tag can't be in both lists; picking it in one removes it from the other.
+- **Where the music is from:** pick one or more regions (USA, Canada, Latin America & Caribbean, Europe incl. UK, Africa, Middle East, Asia, Australia & NZ), or leave it on Anywhere. Each card shows the artist's country, and the Excel export has a "From" column. Spotify doesn't say where artists are from, so the app works it out from a built-in list for well-known artists, the free [MusicBrainz](https://musicbrainz.org) music database, country words in Spotify's genres (e.g. "uk pop"), and the country the recording was registered in. Songs it can't place are skipped unless you turn on **Allow songs if we can't tell where they're from**.
 - Change any of this later from the **⚙︎** button while swiping.
+
+**Keeping suggestions on-genre:** every search result is checked against the genres of your event, chosen genres, picks and imported playlists, and dropped if its artist doesn't share any of them. Kids' music, karaoke, sleep/meditation, workout and holiday artists are filtered out, along with live versions, remixes and compilation-album copies. Searches stay near the top of Spotify's results, where songs are better known.
 
 Genre filtering uses the genres Spotify lists for each artist, plus the song's release year, so it's accurate for most mainstream artists. An artist with no genres on Spotify can't be filtered by genre.
 

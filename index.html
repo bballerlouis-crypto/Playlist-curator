@@ -274,6 +274,9 @@ ul.tracks .rm:hover{background:var(--panel2);color:var(--pink)}
     </div>
     <h3 class="sec">Genres &amp; eras <span>optional · pick any</span></h3>
     <div class="tags" id="incTags"></div>
+    <h3 class="sec">Where the music is from <span>pick any</span></h3>
+    <div class="tags" id="regTags"></div>
+    <label class="tgl" id="unkWrap"><input type="checkbox" id="allowUnknown"> Allow songs if we can't tell where they're from</label>
     <h3 class="sec">Start from your Spotify playlist <span>optional</span></h3>
     <div class="srcs" id="srcList"></div>
     <button class="btn ghost wide" id="btnPickSrc">＋ Add a Spotify playlist</button>
@@ -509,13 +512,14 @@ const SCOPES = 'streaming user-read-email user-read-private user-read-playback-s
 const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 const freshState = () => ({ id: newId(), created: Date.now(), updated: Date.now(), stage: 'title', title: '', hours: 3, event: '', custom: '',
   picks: [], seen: [], history: [], passArtists: {}, match: true, spotifyId: null, spotifyUrl: null,
-  events: [], include: [], exclude: [], noExplicit: false, sources: [], sourceTracks: [], sourceCards: true });
+  events: [], include: [], exclude: [], noExplicit: false, sources: [], sourceTracks: [], sourceCards: true,
+  regions: [], allowUnknownOrigin: false });
 // older saves stored a single event
 const normalize = s => { if ((!s.events || !s.events.length) && s.event) s.events = [s.event]; delete s.event; return s; };
 const evLabels = (s = state) => [
   ...(s.events || []).map(k => k === 'custom' ? (s.custom ? `“${s.custom}”` : '') : EVENTS[k]?.label),
   ...(s.include || []).map(k => TAGS[k]?.label)
-].filter(Boolean).join(' + ') || (s.sources?.length ? 'From your playlist' : 'Not started');
+].filter(Boolean).join(' + ') + ((s.regions || []).length ? ' · ' + s.regions.map(r => REGIONS[r]?.label).filter(Boolean).join(', ') : '') || (s.sources?.length ? 'From your playlist' : 'Not started');
 const hasChoices = (s = state) => (s.events || []).some(k => k !== 'custom' || (s.custom || '').trim()) || s.include.length || s.sources.length;
 let lists = LS.get('pc_lists', {});
 (() => { // bring over the single saved playlist from the first version
@@ -593,9 +597,22 @@ async function api(path, opts = {}, tries = 0) {
 /* ========================= song pool ========================= */
 const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\(.*?\)|\[.*?\]/g, '').replace(/ - .*$/, '').replace(/[^a-z0-9]/g, '');
 const key = (name, artist) => norm(name) + '::' + norm(artist);
-const JUNK = /karaoke|tribute|made famous|in the style of|instrumental|8[- ]?bit|lullaby|music box|piano version|workout|sped up|slowed|nightcore|originally performed/i;
+const JUNK = /karaoke|tribute|made famous|in the style of|instrumental|8[- ]?bit|lullaby|music box|piano version|workout|sped up|slowed|nightcore|originally performed|kidz bop|as made famous/i;
+// Alternate takes that rarely belong on an event playlist (only checked in brackets or after " - ")
+const ALT_TAKE = /[(\[-][^)\]]*\b(live|remix|re-?mix|demo|commentary|acapella|a cappella|8d audio|radio show|interview|session)\b/i;
+// Artist genres that are never what someone is curating for
+const JUNK_GENRES = /children|kids|kindergarten|lullab|nursery|karaoke|sleep|meditation|white noise|asmr|comedy|spoken word|audiobook|background music|workout|fitness|cover band|tribute|study beats|focus|halloween|christmas|holiday|cartoon|soundtrack of the|video game music|anime score/;
+// The genre words each event is about — search results whose artist genres share none of these are dropped
+const EVENT_GENRES = {
+  reception: ['pop', 'dance', 'disco', 'motown', 'soul', 'funk', 'r&b', 'rock', 'hip hop', 'rap', 'latin', 'reggaeton', 'country', 'boy band', 'girl group', 'new wave', 'edm', 'house', 'electro', 'swing', 'afrobeat'],
+  ceremony:  ['acoustic', 'folk', 'singer-songwriter', 'jazz', 'soul', 'swing', 'standards', 'easy listening', 'indie', 'pop', 'r&b', 'crooner', 'lounge', 'bossa', 'country', 'piano', 'americana'],
+  party:     ['pop', 'dance', 'hip hop', 'rap', 'trap', 'edm', 'house', 'electro', 'reggaeton', 'latin', 'r&b', 'afrobeat', 'funk', 'disco', 'urbano', 'dancehall', 'drill', 'moombahton', 'amapiano'],
+  dinner:    ['soul', 'r&b', 'jazz', 'bossa', 'mpb', 'lounge', 'indie', 'folk', 'acoustic', 'singer-songwriter', 'quiet storm', 'chill', 'standards', 'pop', 'funk', 'neo', 'alternative'],
+  throwback: ['disco', 'funk', 'soul', 'new wave', 'synth', 'rock', 'pop', 'r&b', 'hip hop', 'rap', 'dance', 'boy band', 'girl group', 'new jack swing', 'eurodance', 'hair metal', 'latin', 'motown', 'freestyle']
+};
+const customWords = () => (state.custom || '').toLowerCase().split(/[\s,/&+]+/).filter(w => w.length >= 3 && !/^(and|the|music|songs|vibes?|with)$/.test(w));
 let buffer = [], seedQueue = [], queryQueue = [], tagQueue = [], sourceQueue = [], filling = null, seenSet = new Set(), poolKey = '';
-const poolSig = () => JSON.stringify([state.events, state.custom, state.include, state.sources.map(s => s.id), state.sourceCards]);
+const poolSig = () => JSON.stringify([state.events, state.custom, state.include, state.sources.map(s => s.id), state.sourceCards, state.regions]);
 
 function buildPool() {
   seenSet = new Set(state.seen);
@@ -605,11 +622,15 @@ function buildPool() {
   seedQueue = shuffle(seeds.map(s => s.split('|'))).filter(([t, a]) => !seenSet.has(key(t, a)));
   const qs = [];
   evs.forEach(k => {
-    if (k === 'custom') { if (state.custom) qs.push(state.custom, `${state.custom} year:2010-2026`, `${state.custom} year:1970-2009`, `genre:"${state.custom}"`); }
-    else qs.push(...EVENTS[k].queries);
+    if (k === 'custom') {
+      // a custom vibe is first read as an artist or a genre, not as words in song titles
+      if (state.custom) qs.push({ lookup: state.custom }, { q: `genre:"${state.custom.toLowerCase()}"`, why: state.custom, max: 60 });
+    } else EVENTS[k].queries.forEach(q => qs.push({ q, max: 60 }));
   });
-  queryQueue = shuffle([...new Set(qs)]).map(q => ({ q, offset: 0 }));
-  tagQueue = shuffle(state.include.filter(k => TAGS[k]).map(k => ({ q: TAGS[k].q, why: TAGS[k].label, offset: 0 })));
+  queryQueue = shuffle(qs.filter((q, i) => qs.findIndex(x => x.q === q.q && x.lookup === q.lookup) === i)).map(q => Object.assign({ offset: 0 }, q));
+  const tags = state.include.filter(k => TAGS[k]).map(k => ({ q: TAGS[k].q, why: TAGS[k].label, offset: 0, max: 80, tag: k }));
+  const regs = (state.regions || []).flatMap(r => (REGIONS[r]?.q || []).map(q => ({ q, why: `From ${REGIONS[r].label}`, offset: 0, max: 40, src: 'region' })));
+  tagQueue = shuffle(tags.concat(regs));
   sourceQueue = state.sourceCards ? shuffle(state.sourceTracks).filter(t => !seenSet.has(t.id) && !seenSet.has(key(t.name, t.artist0))) : [];
   buffer = [];
   poolKey = poolSig();
@@ -618,12 +639,14 @@ function simplify(t) {
   return { id: t.id, uri: t.uri, name: t.name, artists: t.artists.map(a => a.name).join(', '), artist0: t.artists[0]?.name || '',
            album: t.album?.name || '', image: (t.album?.images || [])[0]?.url || '', dur: t.duration_ms,
            url: t.external_urls?.spotify || `https://open.spotify.com/track/${t.id}`,
-           year: (t.album?.release_date || '').slice(0, 4), artistId: t.artists[0]?.id || '', explicit: !!t.explicit };
+           year: (t.album?.release_date || '').slice(0, 4), artistId: t.artists[0]?.id || '', explicit: !!t.explicit,
+           isrc: t.external_ids?.isrc || '' };
 }
-function accept(t, why) {
+function accept(t, why, src = 'search') {
   if (!t || !t.id || t.is_playable === false || !t.artists) return false;
   if (JUNK.test(t.name) || JUNK.test(t.album?.name || '')) return false;
-  return acceptS(simplify(t), why);
+  if (src !== 'seed' && (ALT_TAKE.test(t.name) || t.album?.album_type === 'compilation')) return false;
+  return acceptS(Object.assign(simplify(t), { src }), why);
 }
 function acceptS(s, why) { // s is an already-simplified song
   if (state.noExplicit && s.explicit) return false;
@@ -638,9 +661,9 @@ function acceptS(s, why) { // s is an already-simplified song
 }
 function markSeen(t) { seenSet.add(t.id); seenSet.add(key(t.name, t.artist0)); state.seen.push(t.id, key(t.name, t.artist0)); }
 
-/* ========================= genres, exclusions, taste ========================= */
+/* ========================= artist genres ========================= */
 // Spotify no longer offers recommendations or song genres, so this uses the genres Spotify
-// lists for each artist (looked up once and cached), plus release year.
+// lists for each artist (looked up once and cached), topped up with MusicBrainz tags.
 let tasteQueue = [], tasteAt = -1;
 const genreCache = LS.get('pc_genres', {});
 const genreInflight = {};
@@ -653,45 +676,199 @@ function learnArtist(t) {
     .catch(e => console.warn(e))
     .finally(() => { delete genreInflight[id]; }));
 }
-async function excluded(c) {
-  if (!state.exclude.length) return false;
-  if (c.artistId && !genreCache[c.artistId]) await learnArtist(c);
-  const g = genreCache[c.artistId] || [];
-  return state.exclude.some(k => TAGS[k] && tagHit(TAGS[k], g, c.year));
+const genresOf = c => { const g = genreCache[c.artistId] || []; return g.length ? g : (mbCache[norm(c.artist0)]?.tags || []); };
+
+/* ========================= where the music is from ========================= */
+// 1) built-in list for the artists in the curated lists, 2) MusicBrainz (free, open music
+// database; one lookup per second), 3) country words in the artist's genres ("uk pop"),
+// 4) the country in the recording's ISRC code. Results are cached in this browser.
+const mbCache = LS.get('pc_mb', {});
+let mbChain = Promise.resolve(), mbFails = 0;
+const mbOff = () => mbFails >= 3;
+function mbLookup(name) {
+  const k = norm(name);
+  if (!k || mbCache[k] || mbOff()) return Promise.resolve(mbCache[k] || null);
+  const run = async () => {
+    if (mbCache[k] || mbOff()) return mbCache[k] || null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const r = await fetch(`https://musicbrainz.org/ws/2/artist/?query=${encodeURIComponent('artist:"' + name.replace(/"/g, '') + '"')}&fmt=json&limit=5`, { headers: { Accept: 'application/json' } });
+        if (r.status === 503) { await sleep(1500); continue; }
+        if (!r.ok) throw new Error('MusicBrainz ' + r.status);
+        const j = await r.json(); mbFails = 0;
+        const hits = (j.artists || []).filter(a => norm(a.name) === k && (a.score || 0) >= 90);
+        const a = hits[0];
+        mbCache[k] = { c: a?.country || '', tags: (a?.tags || []).sort((x, y) => (y.count || 0) - (x.count || 0)).slice(0, 8).map(t => t.name.toLowerCase()) };
+        LS.set('pc_mb', mbCache);
+        return mbCache[k];
+      } catch (e) { console.warn(e); mbFails++; return null; }
+    }
+    return null;
+  };
+  const p = mbChain.then(run).then(async v => { await sleep(1100); return v; }); // MusicBrainz asks for ≤1 request/second
+  mbChain = p.catch(() => {});
+  return p;
 }
+const GENRE_PLACES = [
+  [/\b(uk|british|english|scottish|welsh|london|manchester)\b/, 'GB'], [/\birish\b/, 'IE'], [/\bcanadian\b/, 'CA'], [/\b(australian|aussie)\b/, 'AU'],
+  [/\b(nz|kiwi|new zealand)\b/, 'NZ'], [/\bfrench\b/, 'FR'], [/\bgerman\b/, 'DE'], [/\bitalian\b|italo/, 'IT'], [/\bspanish\b/, 'ES'],
+  [/\bswedish\b/, 'SE'], [/\bnorwegian\b/, 'NO'], [/\bdanish\b/, 'DK'], [/\bdutch\b/, 'NL'], [/\bbelgian\b/, 'BE'], [/\bpolish\b/, 'PL'],
+  [/\bbrazilian\b|\bmpb\b|sertanejo|\bfunk carioca\b/, 'BR'], [/\bmexican\b|musica mexicana|corrido|banda\b|norteno/, 'MX'],
+  [/\bcolombian\b/, 'CO'], [/puerto rican/, 'PR'], [/\bargentin/, 'AR'], [/\bchilean\b/, 'CL'], [/\bdominican\b|bachata/, 'DO'],
+  [/k-pop|korean/, 'KR'], [/j-pop|japanese/, 'JP'], [/c-pop|mandopop|cantopop|chinese/, 'CN'], [/\bindian\b|bollywood|desi|filmi/, 'IN'],
+  [/nigerian|afrobeats|naija/, 'NG'], [/south african|amapiano/, 'ZA'], [/ghanaian|azonto/, 'GH'], [/\bturkish\b/, 'TR'],
+  [/\bisraeli\b/, 'IL'], [/\bfilipino\b|\bopm\b/, 'PH'], [/\bjamaican\b|dancehall/, 'JM'], [/\brussian\b/, 'RU']
+];
+const COUNTRY_REGION = {};
+const REGIONS = {
+  us:      { label: 'USA',                 c: 'US' },
+  ca:      { label: 'Canada',              c: 'CA', q: ['genre:"canadian pop"', 'genre:"canadian hip hop"'] },
+  latam:   { label: 'Latin America & Caribbean', c: 'MX GT BZ SV HN NI CR PA CU DO PR HT JM TT BB BS CO VE EC PE BO CL AR UY PY BR GY SR LC VC GD AG DM KN AW CW',
+             q: ['genre:"latin pop"', 'genre:reggaeton', 'genre:"musica mexicana"', 'genre:salsa', 'genre:mpb'] },
+  europe:  { label: 'Europe (incl. UK)',   c: 'GB IE FR DE NL BE LU CH AT IT ES PT SE NO DK FI IS PL CZ SK HU RO BG GR HR SI RS BA ME MK AL UA BY LT LV EE MD MT CY RU XE',
+             q: ['genre:"uk pop"', 'genre:europop', 'genre:eurodance', 'genre:"french pop"', 'genre:"german pop"', 'genre:"italian pop"', 'genre:"swedish pop"'] },
+  africa:  { label: 'Africa',              c: 'NG GH ZA KE TZ UG ET SN CI CM CD CG AO ZW ZM MZ ML BF NE TD SD EG MA DZ TN LY RW BW NA MW MG CV GA GN BJ TG SL LR GM SO',
+             q: ['genre:afrobeats', 'genre:amapiano', 'genre:afropop'] },
+  mideast: { label: 'Middle East',         c: 'TR IL LB SY JO IQ IR SA AE KW QA BH OM YE PS',
+             q: ['genre:"turkish pop"', 'genre:"arab pop"', 'genre:"israeli pop"'] },
+  asia:    { label: 'Asia',                c: 'KR JP CN TW HK IN PK BD LK NP PH TH VN ID MY SG KH MM MN KZ UZ',
+             q: ['genre:k-pop', 'genre:j-pop', 'genre:"desi pop"', 'genre:opm'] },
+  oceania: { label: 'Australia & NZ',      c: 'AU NZ FJ PG', q: ['genre:"australian pop"', 'genre:"nz pop"'] }
+};
+const REGION_ICON = { us: '🇺🇸', ca: '🇨🇦', latam: '🌎', europe: '🇪🇺', africa: '🌍', mideast: '🕌', asia: '🌏', oceania: '🇦🇺' };
+Object.entries(REGIONS).forEach(([r, v]) => v.c.split(' ').forEach(c => COUNTRY_REGION[c] = r));
+// Countries for the artists in the built-in event lists, so they never need a lookup
+const KNOWN_ORIGIN = (() => {
+  const m = {};
+  const add = (iso, names) => names.split('|').forEach(n => m[norm(n)] = iso);
+  add('US', "*NSYNC|50 Cent|Al Green|Andy Williams|Anita Baker|Backstreet Boys|Bell Biv DeVoe|Beyoncé|Bill Withers|Billie Eilish|Black Eyed Peas|Bon Jovi|Bread|Bright Eyes|Britney Spears|Bruno Mars|C+C Music Factory|CHIC|Cat Power|Chappell Roan|Childish Gambino|Christina Perri|Colbie Caillat|Cupid|Cyndi Lauper|D'Angelo|Darius Rucker|Daryl Hall & John Oates|Donna Summer|Earth, Wind & Fire|Edward Sharpe & The Magnetic Zeros|Elvis Presley|Etta James|Flo Rida|Frank Ocean|Frank Sinatra|Gloria Gaynor|Gwen Stefani|House Of Pain|JVKE|Jack Johnson|Jason Mraz|John Legend|John Mayer|Journey|Justin Timberlake|Kelly Clarkson|Kendrick Lamar|Kenny Loggins|Kesha|Khalid|Kool & The Gang|LMFAO|Lady Gaga|Lizzo|Lord Huron|Louis Armstrong|MC Hammer|MGMT|Macklemore & Ryan Lewis|Madonna|Major Lazer|Maroon 5|Marvin Gaye|Masego|Michael Jackson|Miguel|Miley Cyrus|Missy Elliott|Montell Jordan|Nat King Cole|Neil Diamond|Nelly|Nina Simone|Norah Jones|OutKast|Prince|Ray LaMontagne|Rick James|SZA|Sabrina Carpenter|Silk Sonic|Sixpence None The Richer|Sleeping At Last|Stan Getz|Stevie Wonder|TLC|TOTO|Taylor Swift|The B-52's|The Isley Brothers|The Jackson 5|The Killers|The Lumineers|Train|Travis Scott|Usher|V.I.C.|Van Halen|Vanilla Ice|Village People|WALK THE MOON|Whitney Houston|Wilson Pickett");
+  add('GB', "Adele|Amy Winehouse|Bee Gees|Bonnie Tyler|Calvin Harris|Coldplay|Corinne Bailey Rae|Dexys Midnight Runners|Dua Lipa|Ed Sheeran|Eurythmics|Fleetwood Mac|Harry Styles|Mark Morrison|Mark Ronson|Nick Drake|Queen|Sade|Simple Minds|Sophie Ellis-Bextor|Spice Girls|The Beatles|The Proclaimers|Toploader|Van Morrison|Wham!");
+  add('CA', "Daniel Caesar|Drake|Michael Bublé|Neil Young|The Weeknd");
+  add('PR', "Bad Bunny|Daddy Yankee|Farruko|Luis Fonsi|Ricky Martin");
+  add('FR', "DJ Snake|Daft Punk|David Guetta"); add('DE', "Lou Bega|SNAP!"); add('AU', "Kylie Minogue|The Paper Kites|Vance Joy");
+  add('CO', "J Balvin|Shakira"); add('SE', 'ABBA'); add('NO', 'a-ha'); add('ES', 'Los Del Rio'); add('IE', 'Hozier');
+  add('NG', 'Rema'); add('BB', 'Rihanna'); add('BR', 'Sergio Mendes'); add('KR', 'ROSÉ');
+  return m;
+})();
+const originCache = LS.get('pc_origin', {});
+let regionNames = null;
+try { regionNames = new Intl.DisplayNames(['en'], { type: 'region' }); } catch {}
+const countryName = iso => iso === 'XE' ? 'Europe' : (regionNames?.of(iso) || iso);
+const flag = iso => /^[A-Z]{2}$/.test(iso) && iso !== 'XE' ? String.fromCodePoint(...[...iso].map(ch => 127397 + ch.charCodeAt(0))) : '';
+function originFromGenres(g) {
+  for (const gen of g) for (const [re, iso] of GENRE_PLACES) if (re.test(gen)) return iso;
+  return '';
+}
+// Styles that are mostly from one region even when the recording is registered elsewhere
+function regionHints(g) {
+  const s = g.join(' | '), out = [];
+  if (/latin|reggaeton|urbano|salsa|bachata|cumbia|banda|corrido|dembow|merengue|tropical|mpb|sertanejo/.test(s)) out.push('latam');
+  if (/afro|amapiano|highlife|bongo/.test(s)) out.push('africa');
+  if (/euro|italo|schlager|chanson/.test(s)) out.push('europe');
+  if (/k-pop|j-pop|c-pop|bollywood|desi|opm|thai|indonesian/.test(s)) out.push('asia');
+  if (/arab|turkish|khaleeji|israeli|persian/.test(s)) out.push('mideast');
+  return out;
+}
+function originFromIsrc(isrc) {
+  const p = (isrc || '').slice(0, 2).toUpperCase();
+  if (p === 'QM' || p === 'QT') return 'US'; // extra US prefixes (QZ is used worldwide, so it's ignored)
+  if (p === 'UK') return 'GB';
+  return COUNTRY_REGION[p] ? p : '';
+}
+async function originOf(c, allowLookup) {
+  const k = norm(c.artist0);
+  if (KNOWN_ORIGIN[k]) return KNOWN_ORIGIN[k];
+  if (originCache[k] !== undefined && (originCache[k] || !allowLookup || mbOff() || mbCache[k])) return originCache[k];
+  let iso = originFromGenres(genreCache[c.artistId] || []);
+  if (!iso && allowLookup) iso = (await mbLookup(c.artist0))?.c || '';
+  if (!iso) iso = originFromGenres(mbCache[k]?.tags || []);
+  if (!iso) iso = originFromIsrc(c.isrc);
+  originCache[k] = iso; LS.set('pc_origin', originCache);
+  return iso;
+}
+
+/* ========================= is this song a good fit? ========================= */
+function targetGenres() {
+  const w = new Set();
+  state.events.forEach(k => (EVENT_GENRES[k] || []).forEach(x => w.add(x)));
+  if (state.events.includes('custom')) customWords().forEach(x => w.add(x));
+  state.include.forEach(k => (TAGS[k]?.g || []).forEach(x => w.add(x)));
+  state.picks.concat(state.sourceTracks).forEach(p => genresOf(p).forEach(g => w.add(g)));
+  return [...w];
+}
+// Returns '' if the song can be shown, otherwise the reason it's skipped
+async function vet(c) {
+  await learnArtist(c);
+  const regionsOn = (state.regions || []).length > 0;
+  let g = genreCache[c.artistId] || [];
+  // Spotify has no genres for this artist: ask MusicBrainz when a filter needs them
+  if (!g.length && (state.exclude.length || c.src === 'search')) { await mbLookup(c.artist0); g = genresOf(c); }
+  const custom = customWords().join(' ');
+  const junk = g.find(x => JUNK_GENRES.test(x) && !custom.includes(x.split(' ')[0]));
+  if (junk) return 'junk:' + junk;
+  if (state.exclude.some(k => TAGS[k] && tagHit(TAGS[k], g, c.year))) return 'excluded';
+  if (c.src === 'search' && g.length) {
+    const want = targetGenres();
+    if (want.length && !g.some(x => want.some(w => x.includes(w) || w.includes(x)))) return 'off-genre';
+  }
+  if (c.src === 'tag' && g.length && c.tag && TAGS[c.tag] && !tagHit(TAGS[c.tag], g, c.year)) return 'off-tag';
+  if (regionsOn) {
+    // Quick no: the recording is registered outside your regions and nothing in the artist's
+    // genres points to them. Only songs that might fit wait for a MusicBrainz lookup.
+    const k = norm(c.artist0);
+    if (!KNOWN_ORIGIN[k] && !originCache[k] && !originFromGenres(g)) {
+      const reg = COUNTRY_REGION[originFromIsrc(c.isrc)];
+      if (reg && !state.regions.includes(reg) && !regionHints(g).some(r => state.regions.includes(r))) return 'region';
+    }
+    const iso = await originOf(c, true);
+    c.iso = iso;
+    if (!iso) return state.allowUnknownOrigin ? '' : 'unknown-origin';
+    if (!state.regions.includes(COUNTRY_REGION[iso])) return 'region';
+  } else if (!c.iso) { const k = norm(c.artist0); c.iso = KNOWN_ORIGIN[k] || originCache[k] || originFromGenres(g) || ''; }
+  return '';
+}
+
+/* ========================= taste ========================= */
 function profile() {
   // songs you've added count double; songs from imported playlists count once
-  const arts = {}, mine = {}, genres = {}, years = [];
+  const arts = {}, mine = {}, genres = {}, genreArtists = {}, years = [];
   const take = (p, w) => {
     arts[p.artist0] = (arts[p.artist0] || 0) + w;
-    (genreCache[p.artistId] || []).forEach(g => genres[g] = (genres[g] || 0) + w);
+    genresOf(p).forEach(g => { genres[g] = (genres[g] || 0) + w; (genreArtists[g] = genreArtists[g] || new Set()).add(p.artist0); });
     if (+p.year) for (let i = 0; i < w; i++) years.push(+p.year);
   };
   state.picks.forEach(p => { take(p, 2); mine[p.artist0] = (mine[p.artist0] || 0) + 1; });
   state.sourceTracks.forEach(p => take(p, 1));
   years.sort((a, b) => a - b);
   const top = o => Object.entries(o).sort((a, b) => b[1] - a[1]).map(e => e[0]);
-  return { arts, mine, topArtists: top(arts), topGenres: top(genres), year: years.length ? years[years.length >> 1] : null };
+  const nArtists = Object.keys(arts).length;
+  // a genre only steers suggestions once 2+ of your artists share it (unless you only have one)
+  const topGenres = top(genres).filter(g => genreArtists[g].size >= 2 || nArtists <= 1);
+  return { arts, mine, topArtists: top(arts), topGenres, genres, year: years.length ? years[years.length >> 1] : null };
 }
 const matching = () => state.match && (state.picks.length >= 3 || state.sourceTracks.length > 0);
 function rebuildTaste() {
   const pr = profile();
   const yr = pr.year ? ` year:${pr.year - 6}-${Math.min(pr.year + 6, new Date().getFullYear())}` : '';
   const qs = [];
-  pr.topGenres.filter(g => !state.exclude.some(k => TAGS[k] && TAGS[k].g.some(x => g.includes(x)) && !TAGS[k].y))
-    .slice(0, 3).forEach(g => qs.push({ q: `genre:"${g}"${yr}`, why: `More ${g}`, offset: 0, max: 100 }));
-  shuffle(pr.topArtists.slice(0, 8)).slice(0, 3).forEach(a => qs.push({ q: `artist:"${a}"`, why: `Like ${a}`, offset: 0, perCall: 2, max: 100 }));
+  pr.topGenres.filter(g => !JUNK_GENRES.test(g) && !state.exclude.some(k => TAGS[k] && TAGS[k].g.some(x => g.includes(x)) && !TAGS[k].y))
+    .slice(0, 3).forEach(g => qs.push({ q: `genre:"${g}"${yr}`, why: `More ${g}`, offset: 0, max: 40 }));
+  shuffle(pr.topArtists.slice(0, 8)).slice(0, 3).forEach(a => qs.push({ q: `artist:"${a}"`, artist: a, why: `Like ${a}`, offset: 0, perCall: 2, max: 40, src: 'artist' }));
   tasteQueue = shuffle(qs); tasteAt = state.picks.length;
 }
 function score(c, pr) {
-  let s = Math.random() * 0.8;
-  if (c.why) s += 1.2;
+  let s = Math.random() * 0.5;
+  if (c.src === 'seed') s += 0.6;                         // hand-picked for the event
+  if (c.why) s += 0.8;
   if (pr.arts[c.artist0]) s += 0.8;                       // an artist you like
   const n = pr.mine[c.artist0] || 0;                      // …but not the same one 4 times
   s += n === 2 ? -0.4 : n >= 3 ? -1.5 : 0;
   if (pr.year && +c.year && Math.abs(+c.year - pr.year) <= 6) s += 1;
-  const g = genreCache[c.artistId];
-  if (g && state.include.some(k => TAGS[k] && tagHit(TAGS[k], g, c.year))) s += 1.2;
+  const g = genresOf(c);
+  if (g.length) {
+    if (state.include.some(k => TAGS[k] && tagHit(TAGS[k], g, c.year))) s += 1.2;
+    s += Math.min(1.2, g.filter(x => pr.genres[x]).length * 0.4);   // shares genres with your picks
+  }
   return s;
 }
 function pickNext() {
@@ -704,11 +881,30 @@ function pickNext() {
 const poolExhausted = () => !seedQueue.length && !queryQueue.length && !tagQueue.length && !sourceQueue.length && !buffer.length && !(matching() && tasteQueue.length);
 async function runQuery(queue) {
   const q = queue.shift();
+  if (q.lookup) { // custom vibe: is it an artist?
+    try {
+      const j = await api(`/search?type=artist&limit=3&q=${encodeURIComponent(q.lookup)}`);
+      const a = (j?.artists?.items || []).find(x => norm(x.name) === norm(q.lookup));
+      if (a) {
+        genreCache[a.id] = genreCache[a.id] || a.genres || [];
+        queue.push({ q: `artist:"${a.name}"`, artist: a.name, why: `Like ${a.name}`, offset: 0, max: 40, src: 'artist' });
+        (a.genres || []).slice(0, 2).forEach(g => queue.push({ q: `genre:"${g}"`, why: `More ${g}`, offset: 0, max: 40 }));
+      }
+    } catch (e) { console.warn(e); }
+    return;
+  }
   const j = await api(`/search?type=track&market=from_token&limit=10&offset=${q.offset}&q=${encodeURIComponent(q.q)}`);
   const items = j?.tracks?.items || []; let took = 0;
-  for (const t of shuffle(items)) { if (q.perCall && took >= q.perCall) break; if (accept(t, q.why)) took++; }
+  const src = q.src || (q.tag ? 'tag' : 'search');
+  for (const t of shuffle(items)) {
+    if (q.perCall && took >= q.perCall) break;
+    if (q.artist && !t.artists?.some(a => norm(a.name) === norm(q.artist))) continue; // only that artist's own songs
+    const before = buffer.length;
+    if (accept(t, q.why, src)) { took++; if (q.tag) buffer[before].tag = q.tag; }
+  }
   q.offset += 10;
-  if (items.length === 10 && q.offset < (q.max || 300)) queue.push(q); // rotate for variety
+  // stay near the top of results — deeper pages get obscure fast
+  if (items.length === 10 && q.offset < (q.max || 60)) queue.push(q);
 }
 function fillBuffer(min = 6) {
   if (filling) return filling;
@@ -722,25 +918,27 @@ function fillBuffer(min = 6) {
         const r = Math.random();
         // songs from your imported playlist (~20%)
         if (sourceQueue.length && (r < 0.2 || !(base() || tagQueue.length))) {
-          const s = sourceQueue.shift(); acceptS(s, `From “${s.from}”`); continue;
+          const s = sourceQueue.shift(); acceptS(Object.assign({}, s, { src: 'source' }), `From “${s.from}”`); continue;
         }
         // taste searches based on your picks / playlist (~35%)
         if (matching() && tasteQueue.length && (r < 0.55 || !(base() || tagQueue.length))) { await runQuery(tasteQueue); continue; }
-        // genres & eras you chose (~25%)
+        // genres, eras and places you chose (~25%)
         if (tagQueue.length && (r < 0.8 || !base())) { await runQuery(tagQueue); continue; }
-        // event lists: mostly curated picks, with some search variety
+        // event lists: mostly hand-picked songs, with some search variety
         if (seedQueue.length && (!queryQueue.length || Math.random() < 0.8)) {
           const [title, artist] = seedQueue.shift();
-          const j = await api(`/search?type=track&market=from_token&limit=5&q=${encodeURIComponent(title + ' ' + artist)}`);
+          const j = await api(`/search?type=track&market=from_token&limit=5&q=${encodeURIComponent(`track:"${title}" artist:"${artist}"`)}`);
           const items = j?.tracks?.items || [];
           const a = norm(artist), tt = norm(title);
-          const hit = items.find(t => t.artists.some(x => norm(x.name) === a) && norm(t.name).startsWith(tt.slice(0, 6)))
-                   || items.find(t => t.artists.some(x => { const n = norm(x.name); return n && (n.includes(a) || a.includes(n)); }) && norm(t.name).includes(tt.slice(0, 4)));
-          accept(hit);
+          const byArtist = t => t.artists.some(x => { const n = norm(x.name); return n === a || (n.length > 3 && (n.includes(a) || a.includes(n))); });
+          // the right song by the right artist — not a cover, live take or similarly named track
+          const hit = items.find(t => byArtist(t) && norm(t.name) === tt && !ALT_TAKE.test(t.name))
+                   || items.find(t => byArtist(t) && norm(t.name).startsWith(tt) && !ALT_TAKE.test(t.name));
+          accept(hit, '', 'seed');
         } else if (queryQueue.length) await runQuery(queryQueue);
       }
-      // look up genres for the next few songs so filters and ranking are ready
-      if (state.exclude.length || state.include.length) buffer.slice(0, 5).forEach(learnArtist);
+      // look things up for the next few songs in the background so cards appear quickly
+      buffer.slice(0, 4).forEach(c => { learnArtist(c).then(() => { if ((state.regions || []).length) vet(Object.assign({}, c)); }); });
     } catch (e) { console.warn(e); toast(e.message); }
   };
   // .finally always runs after this assignment, so the busy flag can never get stuck
@@ -949,18 +1147,22 @@ function deckMessage(html) { $('#deck').innerHTML = `<div class="center"><div>${
 
 async function nextCard() {
   current = null;
-  let c = null;
-  for (let tries = 0; tries < 40 && !c; tries++) {
-    if (!buffer.length) { deckMessage('<div class="spin"></div>Finding songs…'); await fillBuffer(6); }
+  let c = null, skipped = 0, why = {};
+  for (let tries = 0; tries < 60 && !c; tries++) {
+    if (!buffer.length) { deckMessage(`<div class="spin"></div>${skipped > 8 ? 'Looking for songs that fit…' : 'Finding songs…'}`); await fillBuffer(6); }
     if (!buffer.length) break;
     const cand = pickNext();
-    if (await excluded(cand)) { markSeen(cand); continue; } // on your "leave out" list
+    if (skipped === 3) deckMessage('<div class="spin"></div>Checking songs…');
+    const no = await vet(cand);
+    if (no) { markSeen(cand); skipped++; why[no.split(':')[0]] = (why[no.split(':')[0]] || 0) + 1; continue; } // doesn't fit — skip quietly
     c = cand;
   }
   if (!$('#s-swipe').classList.contains('on')) { if (c) { c._front = true; buffer.unshift(c); } return; } // left the screen meanwhile
   if (!c) {
-    if (poolExhausted()) { stopClip(); save(); toast('That\'s every song for these choices — review your picks'); return go('review'); }
-    return deckMessage('Couldn\'t load songs.<br><br><button class="btn ghost" onclick="nextCard()">Try again</button>');
+    const regionMsg = why['unknown-origin'] > 3 && !state.allowUnknownOrigin
+      ? ' Tip: turn on “Allow songs if we can’t tell where they’re from” in ⚙︎.' : '';
+    if (poolExhausted()) { stopClip(); save(); toast('That\'s every song for these choices — review your picks.' + regionMsg, 5000); return go('review'); }
+    return deckMessage(`Couldn't find more songs that fit.${regionMsg ? '<br><br>' + regionMsg : ''}<br><br><button class="btn ghost" onclick="nextCard()">Try again</button>`);
   }
   current = c;
   renderCard(current);
@@ -974,7 +1176,7 @@ function renderCard(t) {
       <div class="art" style="background-image:url('${esc(t.image)}')">
         <div class="stamp like">ADD</div><div class="stamp nope">PASS</div>
       </div>
-      <div class="meta">${t.why ? `<div class="why">✨ ${esc(t.why)}</div>` : ''}<h3>${esc(t.name)}</h3><p>${esc(t.artists)}</p><p class="sub">${esc(t.album)} · ${fmt(t.dur)}</p></div>
+      <div class="meta">${t.why ? `<div class="why">✨ ${esc(t.why)}</div>` : ''}<h3>${esc(t.name)}</h3><p>${esc(t.artists)}</p><p class="sub">${t.iso ? `${flag(t.iso)} ${esc(countryName(t.iso))} · ` : ''}${esc(t.album)} · ${fmt(t.dur)}</p></div>
       <div class="player">
         <button class="pbtn" id="backBtn" title="Back 10s">−10</button>
         <div class="ring"><svg viewBox="0 0 60 60"><circle class="bg" cx="30" cy="30" r="26"/><circle class="fg" id="ringFg" cx="30" cy="30" r="26"/></svg>
@@ -1074,17 +1276,18 @@ function renderReview() {
 }
 const safeName = () => (state.title || 'playlist').replace(/[\\/:*?"<>|]+/g, '').trim().slice(0, 80) || 'playlist';
 function exportExcel() {
-  const rows = state.picks.map((t, i) => ({ '#': i + 1, Title: t.name, Artist: t.artists, Album: t.album, Duration: fmt(t.dur), 'Spotify Link': t.url }));
+  const rows = state.picks.map((t, i) => ({ '#': i + 1, Title: t.name, Artist: t.artists, Album: t.album, Duration: fmt(t.dur), From: t.iso ? countryName(t.iso) : '', 'Spotify Link': t.url }));
   if (!window.XLSX) {
     const csv = [Object.keys(rows[0]).join(',')].concat(rows.map(r => Object.values(r).map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))).join('\n');
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = safeName() + '.csv'; a.click();
     return toast('Excel library unavailable offline — saved as CSV (opens in Excel)');
   }
   const ws = XLSX.utils.json_to_sheet(rows);
-  ws['!cols'] = [{ wch: 4 }, { wch: 38 }, { wch: 30 }, { wch: 30 }, { wch: 9 }, { wch: 48 }];
-  rows.forEach((r, i) => { const ref = XLSX.utils.encode_cell({ r: i + 1, c: 5 }); if (ws[ref]) ws[ref].l = { Target: r['Spotify Link'] }; });
+  ws['!cols'] = [{ wch: 4 }, { wch: 38 }, { wch: 30 }, { wch: 30 }, { wch: 9 }, { wch: 18 }, { wch: 48 }];
+  rows.forEach((r, i) => { const ref = XLSX.utils.encode_cell({ r: i + 1, c: 6 }); if (ws[ref]) ws[ref].l = { Target: r['Spotify Link'] }; });
   const info = XLSX.utils.aoa_to_sheet([
     ['Playlist', state.title], ['Mix', evLabels()],
+    ['From', (state.regions || []).length ? state.regions.map(r => REGIONS[r]?.label).join(', ') : 'Anywhere'],
     ['Left out', state.exclude.map(k => TAGS[k]?.label).filter(Boolean).join(', ') + (state.noExplicit ? (state.exclude.length ? ', ' : '') + 'explicit songs' : '') || '—'],
     ['Target length', `${state.hours} hours`], ['Songs', state.picks.length], ['Total length', fmtLong(pickedMs())],
     ['Created', new Date().toLocaleString()]
@@ -1203,6 +1406,11 @@ function renderEvents() {
   $('#customWrap').style.display = state.events.includes('custom') ? 'block' : 'none';
   $('#custom').value = state.custom;
   $('#incTags').innerHTML = Object.entries(TAGS).map(([k, t]) => `<button class="tag ${state.include.includes(k) ? 'on' : ''}" data-tag="${k}">${esc(t.label)}</button>`).join('');
+  const regs = state.regions || [];
+  $('#regTags').innerHTML = `<button class="tag ${regs.length ? '' : 'on'}" data-reg="">🌎 Anywhere</button>` +
+    Object.entries(REGIONS).map(([k, r]) => `<button class="tag ${regs.includes(k) ? 'on' : ''}" data-reg="${k}">${REGION_ICON[k]} ${esc(r.label)}</button>`).join('');
+  $('#unkWrap').style.display = regs.length ? 'flex' : 'none';
+  $('#allowUnknown').checked = !!state.allowUnknownOrigin;
   renderSources(); updateIncNext();
 }
 function updateIncNext() { $('#btnIncNext').disabled = !hasChoices(); }
@@ -1236,6 +1444,13 @@ $('#incTags').addEventListener('click', e => {
   if (state.include.includes(k) && state.exclude.includes(k)) { state.exclude = state.exclude.filter(x => x !== k); toast(`Removed ${TAGS[k].label} from "leave out"`); }
   save(); renderEvents();
 });
+$('#regTags').addEventListener('click', e => {
+  const b = e.target.closest('[data-reg]'); if (!b) return;
+  const k = b.dataset.reg;
+  state.regions = k ? toggleIn(state.regions || [], k) : [];
+  save(); renderEvents();
+});
+$('#allowUnknown').onchange = e => { state.allowUnknownOrigin = e.target.checked; save(); };
 $('#excTags').addEventListener('click', e => {
   const b = e.target.closest('.tag'); if (!b) return; const k = b.dataset.tag;
   state.exclude = toggleIn(state.exclude, k);
