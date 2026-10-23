@@ -89,6 +89,12 @@ Each Spotify app can list several Redirect URIs, so one Client ID can cover both
 
 Genre filtering uses the genres Spotify lists for each artist, plus the song's release year, so it's accurate for most mainstream artists. An artist with no genres on Spotify can't be filtered by genre.
 
+**No repeats:** a song you've added or passed never comes back, including other versions of it (remasters, radio edits, "feat." credits, single vs. album). A different song with the same title by someone else can still appear.
+
+**Artist variety:** an artist (including featured artists) won't come up again within 10 cards, and once you've added 3 songs by the same artist, no more of theirs are suggested.
+
+**Volume:** the slider under the swipe buttons sets the clip volume (tap the speaker icon to mute), and it's remembered. On a computer it controls the clip in the browser tab. On a phone it sets the Spotify app's volume, but iPhones usually don't let other apps change it; when that's the case the slider is greyed out with a note to use the phone's volume buttons.
+
 **Loading and speed:** after step 4, a short "Building your mix" screen gets the first songs ready and connects to Spotify on your phone. While you swipe, the app keeps about 6 songs fully checked in the background, so the next card appears right away. The ready songs, curated-song lookups, genres, BPMs and artist countries are saved in your browser, so reopening a playlist is instant.
 
 While swiping, the top bar has **← Save & exit**, **✨ Match picks** and **Export →**.

@@ -202,6 +202,12 @@ body.touch .keys{display:none}
 .act.no{color:var(--pink);border-color:#ff4f7b66}
 .act.yes{color:var(--green);border-color:#1ed76066}
 .act.small{width:48px;height:48px;font-size:18px;color:var(--amber)}
+.vol{display:flex;align-items:center;gap:12px;max-width:360px;margin:18px auto 0;padding:0 6px}
+.vol button{font-size:20px;width:36px;height:36px;border-radius:50%;flex:none}
+.vol input{flex:1;accent-color:var(--green);height:28px}
+.vol input:disabled{opacity:.4}
+.vol span{width:38px;text-align:right;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.volHint{text-align:center;margin:6px auto 0;max-width:360px}
 .keys{text-align:center;font-size:12px;color:var(--muted);margin-top:12px}
 .center{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--muted);z-index:1}
 .spin{width:34px;height:34px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--green);animation:sp 0.9s linear infinite;margin:0 auto 12px}
@@ -366,6 +372,12 @@ ul.tracks .rm:hover{background:var(--panel2);color:var(--pink)}
       <button class="act yes" id="btnYes" title="Add (→)">♥</button>
       <button class="act small" id="btnDone" title="Finish & review">✓</button>
     </div>
+    <div class="vol">
+      <button id="volMute" aria-label="Mute">🔉</button>
+      <input type="range" id="vol" min="0" max="100" step="1" aria-label="Volume">
+      <span id="volVal"></span>
+    </div>
+    <p class="hint volHint" id="volHint" hidden></p>
     <div class="keys">← pass · → add · space replay · Z undo</div>
   </section>
 
@@ -754,7 +766,9 @@ const poolSig = () => JSON.stringify([state.events, state.custom, state.include,
 
 function buildPool() {
   seenSet = new Set(state.seen);
-  state.picks.forEach(t => { seenSet.add(t.id); seenSet.add(key(t.name, t.artist0)); });
+  titleSeen = {};
+  state.seen.forEach(s => { const i = s.indexOf('::'); if (i > 0) addTitle(s.slice(0, i), [s.slice(i + 2)]); });
+  state.picks.forEach(t => { seenSet.add(t.id); seenSet.add(key(t.name, t.artist0)); addTitle(norm(t.name), artistsOf(t)); });
   const evs = state.events.filter(k => EVENTS[k]);
   const seeds = [...new Set(evs.flatMap(k => EVENTS[k].seeds))];
   seedQueue = shuffle(seeds.map(s => s.split('|'))).filter(([t, a]) => !seenSet.has(key(t, a)));
@@ -778,7 +792,7 @@ function simplify(t) {
            album: t.album?.name || '', image: (t.album?.images || [])[0]?.url || '', dur: t.duration_ms,
            url: t.external_urls?.spotify || `https://open.spotify.com/track/${t.id}`,
            year: (t.album?.release_date || '').slice(0, 4), artistId: t.artists[0]?.id || '', explicit: !!t.explicit,
-           isrc: t.external_ids?.isrc || '' };
+           isrc: t.external_ids?.isrc || '', al: t.artists.map(a => norm(a.name)).filter(Boolean) };
 }
 function accept(t, why, src = 'search') {
   if (!t || !t.id || t.is_playable === false || !t.artists) return false;
@@ -786,18 +800,30 @@ function accept(t, why, src = 'search') {
   if (src !== 'seed' && (ALT_TAKE.test(t.name) || t.album?.album_type === 'compilation')) return false;
   return acceptS(Object.assign(simplify(t), { src }), why);
 }
+// The same song often exists several times on Spotify (single, album, remaster, "feat." credits),
+// so "already seen" means: same title (ignoring brackets and " - Remastered") and any artist in common.
+let titleSeen = {};
+const artistsOf = c => (c.al && c.al.length) ? c.al : (c.artists ? c.artists.split(', ').map(norm) : [norm(c.artist0)]);
+function addTitle(t, arts) { (titleSeen[t] = titleSeen[t] || new Set()); arts.forEach(a => titleSeen[t].add(a)); }
+const sameSong = (a, b) => a.id === b.id || (norm(a.name) === norm(b.name) && artistsOf(a).some(x => artistsOf(b).includes(x)));
+function dupSeen(c) {
+  if (seenSet.has(c.id)) return true;
+  const s = titleSeen[norm(c.name)];
+  return !!s && artistsOf(c).some(a => s.has(a));
+}
+const inQueue = c => buffer.some(b => sameSong(b, c)) || ready.some(r => sameSong(r, c)) || (current && sameSong(current, c));
 function acceptS(s, why) { // s is an already-simplified song
   if (state.noExplicit && s.explicit) return false;
   if ((state.passArtists?.[s.artist0] || 0) >= 2 && !state.picks.some(p => p.artist0 === s.artist0)) return false; // passed twice, never added
   const k = key(s.name, s.artist0);
-  if (seenSet.has(s.id) || seenSet.has(k)) return false;
-  if (buffer.some(b => b.id === s.id || key(b.name, b.artist0) === k)) return false;
+  if (seenSet.has(s.id) || seenSet.has(k) || dupSeen(s)) return false;
+  if (inQueue(s)) return false;
   const c = Object.assign({}, s); delete c.from; delete c.srcId;
   if (why) c.why = why;
   buffer.push(c);
   return true;
 }
-function markSeen(t) { seenSet.add(t.id); seenSet.add(key(t.name, t.artist0)); state.seen.push(t.id, key(t.name, t.artist0)); }
+function markSeen(t) { seenSet.add(t.id); seenSet.add(key(t.name, t.artist0)); addTitle(norm(t.name), artistsOf(t)); state.seen.push(t.id, key(t.name, t.artist0)); }
 
 /* ========================= artist genres ========================= */
 // Spotify no longer offers recommendations or song genres, so this uses the genres Spotify
@@ -1108,11 +1134,25 @@ function score(c, pr) {
   }
   return s;
 }
-function pickNext() {
-  if (buffer[0]?._front) { const t = buffer.shift(); delete t._front; return t; } // undo brings a song back first
-  if (!matching() && !state.include.length) return buffer.shift();
-  const pr = profile(); let best = 0, bs = -Infinity;
-  buffer.slice(0, 10).forEach((c, i) => { const s = score(c, pr); if (s > bs) { bs = s; best = i; } });
+// Keep the same artist from coming up again soon: nobody from the last 10 cards (or already
+// queued), and once you've added 3 songs by an artist, no more of theirs.
+const ARTIST_GAP = 10, ARTIST_CAP = 3;
+function blockedArtists(extra) {
+  const s = new Set(extra || []);
+  state.history.slice(-ARTIST_GAP).forEach(h => artistsOf(h.track).forEach(a => s.add(a)));
+  ready.concat(current ? [current] : []).forEach(c => artistsOf(c).forEach(a => s.add(a)));
+  const n = {};
+  state.picks.forEach(p => { const a = norm(p.artist0); n[a] = (n[a] || 0) + 1; if (n[a] >= ARTIST_CAP) s.add(a); });
+  return s;
+}
+function pickNext(extra) {
+  if (!buffer.length) return null;
+  const blocked = blockedArtists(extra);
+  const open = buffer.slice(0, 16).map((c, i) => [c, i]).filter(([c]) => !artistsOf(c).some(a => blocked.has(a)));
+  if (!open.length) return null;
+  if (!matching() && !state.include.length) return buffer.splice(open[0][1], 1)[0];
+  const pr = profile(); let best = open[0][1], bs = -Infinity;
+  open.forEach(([c, i]) => { const s = score(c, pr); if (s > bs) { bs = s; best = i; } });
   return buffer.splice(best, 1)[0];
 }
 const poolExhausted = () => !seedQueue.length && !queryQueue.length && !tagQueue.length && !sourceQueue.length && !buffer.length && !(matching() && tasteQueue.length);
@@ -1261,7 +1301,7 @@ function initPlayer() {
   playerInit = (async () => {
     await Promise.race([waitSdk(), sleep(8000)]);
     if (!window.Spotify) { playbackMode = 'embed'; return; }
-    player = new Spotify.Player({ name: 'Playlist Curator', getOAuthToken: cb => getToken().then(cb).catch(() => {}), volume: 0.8 });
+    player = new Spotify.Player({ name: 'Playlist Curator', getOAuthToken: cb => getToken().then(cb).catch(() => {}), volume: volume / 100 });
     const ready = new Promise(res => {
       player.addListener('ready', ({ device_id }) => { deviceId = device_id; res(true); });
       ['initialization_error', 'authentication_error', 'account_error'].forEach(ev =>
@@ -1278,8 +1318,43 @@ async function findDevice() {
   const j = await api('/me/player/devices');
   const ds = (j?.devices || []).filter(d => !d.is_restricted);
   const d = ds.find(d => d.is_active) || ds.find(d => d.type === 'Smartphone') || ds[0] || null;
-  connectDevice = d ? { id: d.id, name: d.name } : null;
+  connectDevice = d ? { id: d.id, name: d.name, canVolume: d.supports_volume !== false } : null;
+  updateVolUi();
   return connectDevice;
+}
+
+/* ========================= volume ========================= */
+// On a computer the clip plays in this tab, so the slider sets it directly. On a phone it sets the
+// Spotify app's volume — iPhones usually don't let other apps do that, so the slider says so.
+let volume = (() => { const v = +LS.get('pc_volume', 80); return v >= 0 && v <= 100 ? v : 80; })();
+let lastVolume = volume || 80, volTimer = null, volSentTo = null;
+function volUnsupported() { return (playbackMode === 'connect' && connectDevice && !connectDevice.canVolume) || playbackMode === 'embed'; }
+function updateVolUi() {
+  const s = $('#vol'); if (!s) return;
+  s.value = volume; $('#volVal').textContent = volume + '%';
+  $('#volMute').textContent = volume === 0 ? '🔇' : volume < 40 ? '🔈' : volume < 75 ? '🔉' : '🔊';
+  const off = volUnsupported();
+  s.disabled = off; $('#volMute').disabled = off;
+  $('#volHint').hidden = !off;
+  $('#volHint').textContent = playbackMode === 'embed' ? 'Use the volume on the Spotify player in the card.'
+    : `${connectDevice?.name || 'This device'} doesn't allow volume changes from other apps — use your phone's volume buttons.`;
+}
+async function sendVolume() {
+  if (playbackMode === 'sdk' && player) { player.setVolume(volume / 100).catch(() => {}); return; }
+  if (playbackMode !== 'connect' || !connectDevice || !connectDevice.canVolume) return;
+  try {
+    await api(`/me/player/volume?volume_percent=${volume}&device_id=${connectDevice.id}`, { method: 'PUT' });
+    volSentTo = connectDevice.id;
+  } catch (e) {
+    if (e.status === 403 || e.status === 400 || e.status === 404) { connectDevice.canVolume = false; updateVolUi(); }
+  }
+}
+function setVolume(v, now) {
+  volume = Math.max(0, Math.min(100, Math.round(v)));
+  if (volume) lastVolume = volume;
+  LS.set('pc_volume', volume); updateVolUi();
+  clearTimeout(volTimer);
+  if (playbackMode === 'sdk') sendVolume(); else volTimer = setTimeout(sendVolume, now ? 0 : 250); // phone: don't flood Spotify while dragging
 }
 const activeDeviceId = () => playbackMode === 'connect' ? connectDevice?.id : deviceId;
 function hookStart(t) {
@@ -1316,6 +1391,7 @@ function stopClip(pause = true) {
 async function startPlayback(t, seq) {
   await pendingPause; // make sure a pause for the previous song lands before the next play
   if (seq !== playSeq) return;
+  if (playbackMode === 'connect' && connectDevice?.canVolume && volSentTo !== connectDevice.id) await sendVolume(); // first clip on this phone
   await api(`/me/player/play?device_id=${activeDeviceId()}`, { method: 'PUT', body: JSON.stringify({ uris: [t.uri], position_ms: hookPos }) });
   if (seq !== playSeq) return;
   clipStart = performance.now(); setPlaying(true); tick();
@@ -1350,6 +1426,7 @@ async function playClip(t, pos) {
   }
 }
 function showEmbed(t) {
+  setTimeout(updateVolUi);
   const p = document.querySelector('.card .player, .card .nodev'); if (!p) return;
   const lbl = $('#hookLbl'); if (lbl) lbl.remove();
   p.outerHTML = `<div class="embed"><iframe src="https://open.spotify.com/embed/track/${t.id}?theme=0" allow="autoplay; clipboard-write; encrypted-media" loading="lazy"></iframe></div>`;
@@ -1393,7 +1470,7 @@ const READY_TARGET = 6;
 let ready = [], readyKey = '', pumping = null, pumpProgress = null;
 let pumpStats = { checked: 0, skipped: 0, why: {} };
 const vetSig = () => JSON.stringify([poolSig(), state.exclude, state.noExplicit, state.allowUnknownOrigin, tempoMode()]);
-const skipSong = c => { seenSet.add(c.id); seenSet.add(key(c.name, c.artist0)); };
+const skipSong = c => { seenSet.add(c.id); seenSet.add(key(c.name, c.artist0)); addTitle(norm(c.name), artistsOf(c)); };
 const preloadArt = c => { if (c.image) { const i = new Image(); i.src = c.image; } };
 function persistReady() {
   state.ready = ready.slice(0, 8).map(t => { const c = Object.assign({}, t); delete c._front; return c; });
@@ -1402,7 +1479,7 @@ function persistReady() {
 function preparePool() {
   if (poolKey !== poolSig()) {
     buildPool(); ready = [];
-    if (state.readySig === vetSig()) ready = (state.ready || []).filter(t => !seenSet.has(t.id));
+    if (state.readySig === vetSig()) ready = (state.ready || []).filter(t => !dupSeen(t));
     ready.forEach(preloadArt);
   } else if (readyKey && readyKey !== vetSig()) ready = [];
   readyKey = vetSig();
@@ -1410,18 +1487,28 @@ function preparePool() {
 function pump() {
   if (pumping) return pumping;
   pumping = (async () => {
-    let rounds = 0;
+    let rounds = 0, stuck = 0;
     try {
       while (ready.length < READY_TARGET && rounds++ < 30) {
         if (buffer.length < 3) await fillBuffer(9);
         if (!buffer.length) break;
-        const batch = [];
-        while (batch.length < 3 && buffer.length) batch.push(pickNext());
+        const batch = [], batchArtists = new Set();
+        while (batch.length < 3) {
+          const c = pickNext(batchArtists); if (!c) break;
+          batch.push(c); artistsOf(c).forEach(a => batchArtists.add(a));
+        }
+        if (!batch.length) {
+          // everything waiting is by artists you just heard — find more songs, or as a last resort
+          // take the one whose artist came up longest ago
+          if (!poolExhausted() && stuck++ < 4) { await fillBuffer(buffer.length + 9); continue; }
+          batch.push(buffer.shift());
+        }
+        stuck = 0;
         const res = await Promise.all(batch.map(c => vet(c).catch(e => { console.warn(e); return ''; })));
         batch.forEach((c, i) => {
           pumpStats.checked++;
           if (res[i]) { skipSong(c); pumpStats.skipped++; const r = res[i].split(':')[0]; pumpStats.why[r] = (pumpStats.why[r] || 0) + 1; }
-          else if (!ready.some(x => x.id === c.id) && !seenSet.has(c.id)) { preloadArt(c); ready.push(c); }
+          else if (!ready.some(x => sameSong(x, c)) && !dupSeen(c)) { preloadArt(c); ready.push(c); }
         });
         if (readyKey === vetSig()) persistReady();
         pumpProgress?.();
@@ -1447,7 +1534,10 @@ async function nextCard() {
     if (poolExhausted()) { stopClip(); save(); toast('That\'s every song for these choices — review your picks. ' + tip, 5000); return go('review'); }
     return deckMessage(`Couldn't find more songs that fit.${tip ? '<br><br>' + tip : ''}<br><br><button class="btn ghost" onclick="nextCard()">Try again</button>`);
   }
-  current = ready.shift();
+  // never show a song you've already added or passed (an undo brings one back on purpose)
+  while (ready.length && !ready[0]._undo && dupSeen(ready[0])) ready.shift();
+  if (!ready.length) return nextCard();
+  current = ready.shift(); delete current._undo;
   persistReady();
   renderCard(current);
   playClip(current);
@@ -1552,8 +1642,7 @@ async function decide(action) {
     c.style.transform = `translate(${dir * 650}px,-30px) rotate(${dir * 28}deg)`; c.style.opacity = 0;
   }
   stopClip();
-  seenSet.add(t.id); seenSet.add(key(t.name, t.artist0));
-  state.seen.push(t.id, key(t.name, t.artist0));
+  markSeen(t);
   if (action === 'add') { state.picks.push(t); learnArtist(t); }
   else state.passArtists[t.artist0] = (state.passArtists[t.artist0] || 0) + 1;
   state.history.push({ action, track: t });
@@ -1573,7 +1662,7 @@ function undo() {
   if (h.action === 'add') state.picks = state.picks.filter(p => p.id !== h.track.id);
   else state.passArtists[h.track.artist0] = Math.max(0, (state.passArtists[h.track.artist0] || 1) - 1);
   if (current) ready.unshift(current);
-  ready.unshift(h.track);
+  h.track._undo = true; ready.unshift(h.track);
   save(); updateProgress(); stopClip();
   toast(h.action === 'add' ? 'Removed — swipe it again' : 'Brought it back');
   nextCard();
@@ -1706,7 +1795,7 @@ function go(stage, persist = true) {
   if (stage === 'exclude') renderExclude();
   if (stage === 'review') renderReview();
   if (stage === 'swipe') {
-    updateProgress(); updateMatchBtn();
+    updateProgress(); updateMatchBtn(); updateVolUi();
     const sigBefore = readyKey;
     preparePool();
     if (current && sigBefore === readyKey) { renderCard(current); playClip(current); }
@@ -1898,6 +1987,9 @@ $('#tempoTags').addEventListener('click', e => {
   state.tempo = b.dataset.tempo; state.tempoSet = true; save(); renderEvents();
 });
 $$('[data-go]').forEach(b => b.onclick = () => go(b.dataset.go));
+$('#vol').addEventListener('input', e => setVolume(+e.target.value));
+$('#vol').addEventListener('change', e => setVolume(+e.target.value, true));
+$('#volMute').onclick = () => setVolume(volume ? 0 : lastVolume, true);
 $('#btnYes').onclick = () => decide('add');
 $('#btnNo').onclick = () => decide('pass');
 $('#btnUndo').onclick = undo;
