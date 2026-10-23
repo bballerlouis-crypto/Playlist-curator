@@ -103,6 +103,8 @@ body.touch .keys{display:none}
 .sec{font-size:15px;margin:22px 0 10px;display:flex;align-items:baseline;gap:8px}
 .sec span{font-size:12px;color:var(--muted);font-weight:500}
 .tags{display:flex;flex-wrap:wrap;gap:8px}
+.tgh{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;font-weight:700;margin:14px 0 7px}
+.tgh:first-child{margin-top:2px}
 .tag{padding:8px 13px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:14px}
 .tag.on{background:#1ed76020;border-color:var(--green);color:var(--green);font-weight:600}
 .tag.x{background:#ff4f7b1c;border-color:var(--pink);color:var(--pink);font-weight:600;text-decoration:line-through}
@@ -131,6 +133,24 @@ body.touch .keys{display:none}
 .sheetFt .text{font-size:15px;padding:11px 12px}
 .sheetFt .btn{padding:11px 16px}
 .tool.icon{flex:0 0 42px;padding:9px 0}
+#tempoDesc{margin-top:8px}
+.loadWrap{text-align:center;padding-top:6vh}
+.loadWrap h1{margin-top:22px}
+.loadWrap .bar{margin:18px auto 22px;max-width:360px}
+.eq{display:flex;gap:6px;justify-content:center;align-items:flex-end;height:54px}
+.eq i{width:9px;border-radius:5px;background:linear-gradient(180deg,var(--green),#0fa3a3);animation:eq 1s ease-in-out infinite}
+.eq i:nth-child(2){animation-delay:-.2s}.eq i:nth-child(3){animation-delay:-.45s}.eq i:nth-child(4){animation-delay:-.7s}.eq i:nth-child(5){animation-delay:-.9s}
+@keyframes eq{0%,100%{height:12px}50%{height:54px}}
+.ldSteps{list-style:none;padding:0;margin:0 auto;max-width:360px;text-align:left}
+.ldSteps li{display:flex;gap:12px;align-items:center;padding:9px 0;color:var(--muted);font-size:15px}
+.ldSteps li .dot{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-size:12px}
+.ldSteps li.active{color:var(--text)}
+.ldSteps li.active .dot{border-color:var(--green);border-top-color:transparent;animation:sp .9s linear infinite}
+.ldSteps li.done{color:#d6d6e0}
+.ldSteps li.done .dot{background:var(--green);border-color:var(--green);color:#06120a}
+.ldSteps li.warn .dot{border-color:var(--amber);color:var(--amber)}
+.ldSteps small{display:block;font-size:12.5px;color:var(--muted)}
+#ldTip{min-height:40px;margin-top:22px;transition:opacity .3s}
 @media (max-width:480px){
   #app{padding:12px 14px calc(24px + env(safe-area-inset-bottom))}
   header{margin-bottom:12px}
@@ -272,8 +292,11 @@ ul.tracks .rm:hover{background:var(--panel2);color:var(--pink)}
       <label class="f" for="custom">Describe the vibe (genre, mood, artist…)</label>
       <input class="text" id="custom" placeholder="e.g. beach reggae, country, Taylor Swift">
     </div>
+    <h3 class="sec">Tempo <span id="tempoHint"></span></h3>
+    <div class="tags" id="tempoTags"></div>
+    <p class="hint" id="tempoDesc"></p>
     <h3 class="sec">Genres &amp; eras <span>optional · pick any</span></h3>
-    <div class="tags" id="incTags"></div>
+    <div id="incTags"></div>
     <h3 class="sec">Where the music is from <span>pick any</span></h3>
     <div class="tags" id="regTags"></div>
     <label class="tgl" id="unkWrap"><input type="checkbox" id="allowUnknown"> Allow songs if we can't tell where they're from</label>
@@ -290,9 +313,22 @@ ul.tracks .rm:hover{background:var(--panel2);color:var(--pink)}
     <div class="step">Step 4 of 4</div>
     <h1>What shouldn't come up?</h1>
     <p class="lead">Tap anything to keep out. Matching songs are skipped automatically.</p>
-    <div class="tags" id="excTags"></div>
+    <div id="excTags"></div>
     <label class="tgl"><input type="checkbox" id="noExplicit"> No explicit songs</label>
     <div class="row"><button class="btn primary" id="btnStart">Start swiping →</button></div>
+  </section>
+
+  <!-- LOADING -->
+  <section class="screen" id="s-loading">
+    <div class="loadWrap">
+      <div class="eq"><i></i><i></i><i></i><i></i><i></i></div>
+      <h1>Building your mix</h1>
+      <p class="lead" id="ldTitle"></p>
+      <div class="bar"><i id="ldBar"></i></div>
+      <ul class="ldSteps" id="ldSteps"></ul>
+      <p class="hint" id="ldTip"></p>
+      <button class="linkbtn" id="ldBack">← Change choices</button>
+    </div>
   </section>
 
   <!-- SWIPE -->
@@ -459,28 +495,73 @@ const EVENTS = {
    q: the Spotify search used when the tag is included.
    ========================================================================= */
 const TAGS = {
-  motown:  { label: 'Motown',            g: ['motown'],                                   q: 'genre:motown' },
-  soul70:  { label: '70s soul & funk',   g: ['soul', 'funk'],          y: [1970, 1979],   q: 'genre:soul year:1970-1979' },
-  disco:   { label: 'Disco',             g: ['disco'],                                    q: 'genre:disco' },
-  pop80:   { label: '80s pop',           g: ['pop', 'new wave', 'synth'], y: [1980, 1989], q: 'genre:pop year:1980-1989' },
-  rock:    { label: 'Classic rock',      g: ['rock'],                  y: [1960, 1995],   q: 'genre:"classic rock"' },
-  rnb90:   { label: '90s R&B',           g: ['r&b', 'new jack swing'], y: [1990, 1999],   q: 'genre:"r&b" year:1990-1999' },
-  pop00:   { label: '2000s pop',         g: ['pop'],                   y: [2000, 2009],   q: 'genre:pop year:2000-2009' },
-  hits:    { label: "Today's hits",      g: ['pop'],                   y: [2020, 2026],   q: 'genre:pop year:2020-2026' },
-  hiphop:  { label: 'Hip-hop & rap',     g: ['hip hop', 'rap', 'trap', 'drill'],          q: 'genre:"hip hop"' },
-  rnb:     { label: 'Modern R&B',        g: ['r&b'],                   y: [2005, 2026],   q: 'genre:"r&b" year:2005-2026' },
-  edm:     { label: 'EDM & house',       g: ['edm', 'house', 'electro', 'big room', 'trance'], q: 'genre:edm' },
-  country: { label: 'Country',           g: ['country'],                                  q: 'genre:country' },
-  latin:   { label: 'Latin & reggaeton', g: ['latin', 'reggaeton', 'salsa', 'bachata', 'urbano', 'cumbia'], q: 'genre:reggaeton' },
-  afro:    { label: 'Afrobeats',         g: ['afrobeat', 'afropop', 'amapiano'],          q: 'genre:afrobeats' },
-  indie:   { label: 'Indie',             g: ['indie'],                                    q: 'genre:indie' },
-  folk:    { label: 'Acoustic & folk',   g: ['acoustic', 'folk', 'singer-songwriter'],    q: 'genre:folk' },
-  jazz:    { label: 'Jazz & swing',      g: ['jazz', 'swing', 'big band'],                q: 'genre:jazz' },
-  metal:   { label: 'Metal & hard rock', g: ['metal', 'hard rock'],                       q: 'genre:metal' },
-  punk:    { label: 'Punk & emo',        g: ['punk', 'emo'],                              q: 'genre:punk' },
-  kpop:    { label: 'K-pop',             g: ['k-pop'],                                    q: 'genre:k-pop' },
-  gospel:  { label: 'Gospel & worship',  g: ['gospel', 'christian', 'worship'],           q: 'genre:gospel' }
+  // Pop
+  oldies:    { label: '50s & 60s oldies',        g: ['rock-and-roll', 'rock and roll', 'doo-wop', 'rockabilly', 'oldies', 'british invasion', 'brill building'], y: [1950, 1969], q: 'genre:"rock-and-roll" year:1955-1969' },
+  pop80:     { label: '80s pop',                 g: ['pop', 'new wave', 'synth'],            y: [1980, 1989], q: 'genre:pop year:1980-1989' },
+  pop90:     { label: '90s pop',                 g: ['pop', 'boy band', 'girl group', 'eurodance'], y: [1990, 1999], q: 'genre:"dance pop" year:1990-1999' },
+  pop00:     { label: '2000s pop',               g: ['pop'],                                 y: [2000, 2009], q: 'genre:pop year:2000-2009' },
+  pop10:     { label: '2010s pop',               g: ['pop', 'electropop'],                   y: [2010, 2019], q: 'genre:pop year:2010-2019' },
+  hits:      { label: '2020s pop',               g: ['pop'],                                 y: [2020, 2026], q: 'genre:pop year:2020-2026' },
+  newhits:   { label: 'New releases (2025–26)',  g: ['pop', 'dance', 'hip hop', 'rap', 'r&b', 'latin', 'reggaeton', 'country', 'afrobeat', 'indie'], y: [2025, 2026],
+               q: ['genre:pop year:2025-2026', 'genre:"hip hop" year:2025-2026', 'genre:dance year:2025-2026'] },
+  indiepop:  { label: 'Indie pop & alt-pop',     g: ['indie pop', 'alt pop', 'alternative pop', 'bedroom pop', 'art pop', 'electropop'], y: [2012, 2026], q: 'genre:"indie pop" year:2012-2026' },
+  kpop:      { label: 'K-pop',                   g: ['k-pop'],                               q: 'genre:k-pop' },
+  // Hip-hop & R&B
+  hiphop90:  { label: '90s hip-hop',             g: ['hip hop', 'rap', 'east coast', 'west coast', 'g funk', 'gangster rap', 'boom bap'], y: [1988, 1999], q: 'genre:"hip hop" year:1988-1999' },
+  hiphop00:  { label: '2000s hip-hop',           g: ['hip hop', 'rap', 'crunk', 'dirty south', 'southern hip hop', 'pop rap'], y: [2000, 2009], q: 'genre:"hip hop" year:2000-2009' },
+  trap:      { label: 'Trap & melodic rap',      g: ['trap', 'melodic rap', 'rap', 'plugg', 'rage'], y: [2014, 2026], q: ['genre:trap year:2015-2026', 'genre:"melodic rap"'] },
+  drill:     { label: 'Drill',                   g: ['drill'],                               q: 'genre:drill' },
+  hiphop:    { label: 'Hip-hop (all eras)',      g: ['hip hop', 'rap', 'trap', 'drill'],     q: 'genre:"hip hop"' },
+  rnb90:     { label: '90s R&B',                 g: ['r&b', 'new jack swing'],               y: [1990, 1999], q: 'genre:"r&b" year:1990-1999' },
+  rnb00:     { label: '2000s R&B',               g: ['r&b', 'urban contemporary'],           y: [2000, 2009], q: 'genre:"r&b" year:2000-2009' },
+  rnb:       { label: 'Modern R&B',              g: ['r&b'],                                 y: [2010, 2026], q: 'genre:"r&b" year:2012-2026' },
+  altrnb:    { label: 'Alt R&B',                 g: ['alternative r&b', 'alt r&b'],          q: 'genre:"alternative r&b"' },
+  // Dance & electronic
+  disco:     { label: 'Disco',                   g: ['disco'],                               q: 'genre:disco' },
+  nudisco:   { label: 'Nu-disco & disco revival', g: ['nu disco', 'nu-disco', 'disco house', 'french house'], q: 'genre:"nu disco"' },
+  house:     { label: 'House & tech house',      g: ['house', 'tech house', 'deep house', 'uk garage', 'bass house'], q: ['genre:"tech house"', 'genre:house year:2015-2026'] },
+  edm:       { label: 'EDM & big room',          g: ['edm', 'big room', 'electro', 'progressive house', 'trance'], q: 'genre:edm' },
+  afrohouse: { label: 'Afro house',              g: ['afro house', 'afro tech'],             q: 'genre:"afro house"' },
+  synthwave: { label: 'Synthwave & retro',       g: ['synthwave', 'retrowave', 'darksynth'], q: 'genre:synthwave' },
+  // Soul & funk
+  motown:    { label: 'Motown',                  g: ['motown'],                              q: 'genre:motown' },
+  soul70:    { label: '70s soul & funk',         g: ['soul', 'funk'],                        y: [1970, 1979], q: 'genre:soul year:1970-1979' },
+  gospel:    { label: 'Gospel & worship',        g: ['gospel', 'christian', 'worship'],      q: 'genre:gospel' },
+  // Rock & indie
+  rock:      { label: 'Classic rock',            g: ['rock'],                                y: [1960, 1995], q: 'genre:"classic rock"' },
+  indierock: { label: '2000s indie rock',        g: ['indie rock', 'garage rock', 'post-punk revival', 'modern rock', 'britpop'], y: [2000, 2012], q: 'genre:"indie rock" year:2000-2012' },
+  altrock:   { label: 'Alt rock',                g: ['alternative rock', 'modern rock', 'grunge', 'post-grunge'], q: 'genre:"alternative rock"' },
+  indie:     { label: 'Indie (all)',             g: ['indie'],                               q: 'genre:indie' },
+  punk:      { label: 'Pop punk & emo',          g: ['punk', 'emo'],                         q: 'genre:punk' },
+  metal:     { label: 'Metal & hard rock',       g: ['metal', 'hard rock'],                  q: 'genre:metal' },
+  // Country & folk
+  countrypop:{ label: 'Modern country',          g: ['country', 'contemporary country', 'country pop', 'country rap'], y: [2012, 2026], q: 'genre:country year:2015-2026' },
+  country:   { label: 'Country (all eras)',      g: ['country'],                             q: 'genre:country' },
+  folk:      { label: 'Acoustic & folk',         g: ['acoustic', 'folk', 'singer-songwriter'], q: 'genre:folk' },
+  // Latin & global
+  latin:     { label: 'Reggaeton & Latin pop',   g: ['latin', 'reggaeton', 'salsa', 'bachata', 'urbano', 'cumbia'], q: ['genre:reggaeton', 'genre:"latin pop"'] },
+  regmex:    { label: 'Regional Mexican',        g: ['corrido', 'regional mexican', 'musica mexicana', 'banda', 'norteno', 'sierreno', 'mariachi'], q: 'genre:"musica mexicana"' },
+  tropical:  { label: 'Salsa, bachata & merengue', g: ['salsa', 'bachata', 'merengue', 'tropical'], q: ['genre:bachata', 'genre:salsa'] },
+  afro:      { label: 'Afrobeats',               g: ['afrobeat', 'afropop', 'afrobeats', 'naija', 'afro r&b'], q: 'genre:afrobeats' },
+  amapiano:  { label: 'Amapiano',                g: ['amapiano'],                            q: 'genre:amapiano' },
+  dancehall: { label: 'Dancehall & reggae',      g: ['dancehall', 'reggae', 'soca'],         q: 'genre:dancehall' },
+  bollywood: { label: 'Bollywood & desi',        g: ['bollywood', 'desi', 'filmi', 'punjabi', 'bhangra'], q: 'genre:bollywood' },
+  // Jazz & standards
+  jazz:      { label: 'Jazz & swing',            g: ['jazz', 'swing', 'big band'],           q: 'genre:jazz' },
+  broadway:  { label: 'Broadway & musicals',     g: ['show tunes', 'broadway', 'musicals', 'musical theatre'], q: 'genre:"show tunes"' }
 };
+const TAG_GROUPS = [
+  ['Pop', ['oldies', 'pop80', 'pop90', 'pop00', 'pop10', 'hits', 'newhits', 'indiepop', 'kpop']],
+  ['Hip-hop & R&B', ['hiphop90', 'hiphop00', 'trap', 'drill', 'hiphop', 'rnb90', 'rnb00', 'rnb', 'altrnb']],
+  ['Dance & electronic', ['disco', 'nudisco', 'house', 'edm', 'afrohouse', 'synthwave']],
+  ['Soul & funk', ['motown', 'soul70', 'gospel']],
+  ['Rock & indie', ['rock', 'indierock', 'altrock', 'indie', 'punk', 'metal']],
+  ['Country & folk', ['countrypop', 'country', 'folk']],
+  ['Latin & global', ['latin', 'regmex', 'tropical', 'afro', 'amapiano', 'dancehall', 'bollywood']],
+  ['Jazz & standards', ['jazz', 'broadway']]
+];
+const tagGroupsHtml = cls => TAG_GROUPS.map(([label, keys]) => `<div class="tgh">${label}</div><div class="tags">${
+  keys.filter(k => TAGS[k]).map(k => `<button class="tag ${cls(k)}" data-tag="${k}">${esc(TAGS[k].label)}</button>`).join('')}</div>`).join('');
 function tagHit(tag, genres, year) {
   if (tag.y && !(+year >= tag.y[0] && +year <= tag.y[1])) return false;
   return genres.some(g => tag.g.some(x => g.includes(x)));
@@ -513,7 +594,7 @@ const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2
 const freshState = () => ({ id: newId(), created: Date.now(), updated: Date.now(), stage: 'title', title: '', hours: 3, event: '', custom: '',
   picks: [], seen: [], history: [], passArtists: {}, match: true, spotifyId: null, spotifyUrl: null,
   events: [], include: [], exclude: [], noExplicit: false, sources: [], sourceTracks: [], sourceCards: true,
-  regions: [], allowUnknownOrigin: false });
+  regions: [], allowUnknownOrigin: false, tempo: 'any', tempoSet: false, ready: [], readySig: '' });
 // older saves stored a single event
 const normalize = s => { if ((!s.events || !s.events.length) && s.event) s.events = [s.event]; delete s.event; return s; };
 const evLabels = (s = state) => [
@@ -533,7 +614,7 @@ function save() {
   state.updated = Date.now(); lists[state.id] = state;
   LS.set('pc_lists', lists); LS.set('pc_active', state.id);
 }
-function resetPool() { buffer = []; poolKey = ''; current = null; tasteQueue = []; tasteAt = -1; }
+function resetPool() { buffer = []; poolKey = ''; current = null; tasteQueue = []; tasteAt = -1; ready = []; readyKey = ''; }
 function openList(id) { stopClip(); state = normalize(Object.assign(freshState(), lists[id])); LS.set('pc_active', id); resetPool(); }
 const targetMs = () => state.hours * 3600000;
 const pickedMs = () => state.picks.reduce((a, t) => a + t.dur, 0);
@@ -628,7 +709,7 @@ function buildPool() {
     } else EVENTS[k].queries.forEach(q => qs.push({ q, max: 60 }));
   });
   queryQueue = shuffle(qs.filter((q, i) => qs.findIndex(x => x.q === q.q && x.lookup === q.lookup) === i)).map(q => Object.assign({ offset: 0 }, q));
-  const tags = state.include.filter(k => TAGS[k]).map(k => ({ q: TAGS[k].q, why: TAGS[k].label, offset: 0, max: 80, tag: k }));
+  const tags = state.include.filter(k => TAGS[k]).flatMap(k => [].concat(TAGS[k].q).map(q => ({ q, why: TAGS[k].label, offset: 0, max: 80, tag: k })));
   const regs = (state.regions || []).flatMap(r => (REGIONS[r]?.q || []).map(q => ({ q, why: `From ${REGIONS[r].label}`, offset: 0, max: 40, src: 'region' })));
   tagQueue = shuffle(tags.concat(regs));
   sourceQueue = state.sourceCards ? shuffle(state.sourceTracks).filter(t => !seenSet.has(t.id) && !seenSet.has(key(t.name, t.artist0))) : [];
@@ -787,6 +868,95 @@ async function originOf(c, allowLookup) {
   return iso;
 }
 
+/* ========================= tempo (BPM) and popularity ========================= */
+// Spotify removed tempo data for apps like this, so BPM and a popularity rank come from Deezer's
+// free public catalog (matched by the song's ISRC code). Deezer only allows this from a web page
+// as JSONP. If it isn't reachable, tempo falls back to genre and the event lists.
+const TEMPOS = {
+  any:   { label: 'Any tempo',     icon: '🎵', desc: 'No tempo filter.' },
+  chill: { label: 'Slow & mellow', icon: '🛋️', desc: 'Slower songs, around 100 BPM and under — dinner, ceremony, background.' },
+  mid:   { label: 'Mid-tempo',     icon: '🎶', desc: 'Grooves around 85–120 BPM — cocktail hour, warm-up.' },
+  dance: { label: 'Dance floor',   icon: '💃', desc: 'Upbeat songs, about 105+ BPM (85+ for hip-hop, reggaeton and afrobeats). Ballads are skipped.' }
+};
+const defaultTempo = () => state.events.some(k => k === 'reception' || k === 'party') ? 'dance'
+  : (state.events.includes('dinner') && !state.events.includes('throwback') ? 'chill' : 'any');
+const tempoMode = () => state.tempoSet ? (state.tempo || 'any') : defaultTempo();
+// First dances and ballads in the curated lists, plus everything from the mellow events
+const SLOW_SEEDS = new Set([['Perfect', 'Ed Sheeran'], ['At Last', 'Etta James'], ['Thinking out Loud', 'Ed Sheeran'], ['Total Eclipse of the Heart', 'Bonnie Tyler']].map(([t, a]) => key(t, a)));
+const SEED_ENERGY = (() => {
+  const m = {};
+  Object.entries(EVENTS).forEach(([k, ev]) => ev.seeds.forEach(s => {
+    const [t, a] = s.split('|'), sk = key(t, a);
+    if (['reception', 'party', 'throwback'].includes(k) && !SLOW_SEEDS.has(sk)) m[sk] = 'up';
+    else if (!m[sk]) m[sk] = 'slow';
+  }));
+  return m;
+})();
+const seedEnergy = sk => SEED_ENERGY[sk] === 'up' ? { seedUp: true } : { seedSlow: true };
+const lsLater = (() => { const t = {}; return (k, v) => { clearTimeout(t[k]); t[k] = setTimeout(() => LS.set(k, v), 800); }; })();
+const dzCache = LS.get('pc_dz', {});
+const seedHits = LS.get('pc_seedhits', {});
+let dzFails = 0, dzN = 0;
+function jsonp(url, ms = 7000) {
+  return new Promise((res, rej) => {
+    const cb = '__dz' + (++dzN) + Date.now().toString(36), s = document.createElement('script');
+    const done = () => { clearTimeout(timer); s.remove(); window[cb] = () => {}; setTimeout(() => { delete window[cb]; }, 60000); };
+    const timer = setTimeout(() => { done(); rej(new Error('Deezer timeout')); }, ms);
+    window[cb] = d => { done(); res(d); };
+    s.onerror = () => { done(); rej(new Error('Deezer unavailable')); };
+    s.src = url + (url.includes('?') ? '&' : '?') + 'output=jsonp&callback=' + cb;
+    document.head.appendChild(s);
+  });
+}
+const dzInflight = {};
+function dzInfo(c) {
+  if (dzCache[c.id]) return Promise.resolve(dzCache[c.id]);
+  if (dzFails >= 3) return Promise.resolve(null);
+  if (dzInflight[c.id]) return dzInflight[c.id];
+  return (dzInflight[c.id] = (async () => {
+    try {
+      let t = null;
+      if (c.isrc) { t = await jsonp('https://api.deezer.com/track/isrc:' + encodeURIComponent(c.isrc)); if (!t || t.error) t = null; }
+      if (!t) {
+        const title = c.name.replace(/\s*[(\[].*$|\s+-\s+.*$/, '');
+        const s = await jsonp(`https://api.deezer.com/search?limit=5&q=${encodeURIComponent(`artist:"${c.artist0}" track:"${title}"`)}`);
+        const hit = (s?.data || []).find(x => norm(x.artist?.name) === norm(c.artist0));
+        if (hit) { t = await jsonp('https://api.deezer.com/track/' + hit.id); if (!t || t.error) t = { rank: hit.rank }; }
+      }
+      dzFails = 0;
+      const v = { bpm: Math.round(t?.bpm || 0), rank: t?.rank || 0 };
+      dzCache[c.id] = v; lsLater('pc_dz', dzCache);
+      return v;
+    } catch (e) { console.warn(e); dzFails++; return null; }
+    finally { delete dzInflight[c.id]; }
+  })());
+}
+const GROOVE = /hip hop|rap|trap|reggaeton|dancehall|afrobeat|afropop|urbano|dembow|moombahton|amapiano|latin|drill|funk|r&b|bachata|cumbia|reggae/;
+const DANCEY = /dance|edm|house|disco|funk|reggaeton|electro|eurodance|moombahton|afrobeat|amapiano|dancehall|techno|club|garage|big room|nu disco|new jack|hi-nrg|freestyle/;
+const MELLOW = /acoustic|folk|singer-songwriter|ballad|soft|ambient|piano|easy listening|adult standards|quiet storm|bossa|lo-fi|chill|slowcore|lullab/;
+const BALLAD_TITLE = /\b(acoustic|piano version|ballad|unplugged|stripped|lullaby|slowed)\b/i;
+function realBpm(b, gs) { return b && b < 75 && /edm|house|dance|disco|techno|electro|drum|garage|amapiano|big room/.test(gs) ? b * 2 : b; }
+function tempoFit(c, g) {
+  const mode = tempoMode(); if (mode === 'any') return '';
+  const gs = g.join(' | '), bpm = realBpm(c.bpm || 0, gs);
+  const groove = GROOVE.test(gs), dancey = DANCEY.test(gs), mellow = MELLOW.test(gs) && !dancey;
+  if (mode === 'dance') {
+    if (BALLAD_TITLE.test(c.name + ' ' + c.album)) return 'slow';
+    if (bpm) return bpm >= (groove ? 85 : 105) ? '' : 'slow';
+    if (c.seedSlow) return 'slow';
+    if (mellow) return 'slow';
+    return '';
+  }
+  if (mode === 'chill') {
+    if (bpm) return bpm <= 102 || (mellow && bpm <= 115) ? '' : 'fast';
+    if (c.seedUp) return 'fast';
+    if (dancey) return 'fast';
+    return '';
+  }
+  if (bpm) return bpm >= 85 && bpm <= 122 ? '' : (bpm < 85 ? 'slow' : 'fast'); // mid
+  return '';
+}
+
 /* ========================= is this song a good fit? ========================= */
 function targetGenres() {
   const w = new Set();
@@ -798,7 +968,9 @@ function targetGenres() {
 }
 // Returns '' if the song can be shown, otherwise the reason it's skipped
 async function vet(c) {
-  await learnArtist(c);
+  const needDz = tempoMode() !== 'any' || ['search', 'tag', 'region'].includes(c.src);
+  const [, dz] = await Promise.all([learnArtist(c), needDz ? dzInfo(c) : null]);
+  if (dz) { c.bpm = dz.bpm; c.rank = dz.rank; }
   const regionsOn = (state.regions || []).length > 0;
   let g = genreCache[c.artistId] || [];
   // Spotify has no genres for this artist: ask MusicBrainz when a filter needs them
@@ -807,6 +979,9 @@ async function vet(c) {
   const junk = g.find(x => JUNK_GENRES.test(x) && !custom.includes(x.split(' ')[0]));
   if (junk) return 'junk:' + junk;
   if (state.exclude.some(k => TAGS[k] && tagHit(TAGS[k], g, c.year))) return 'excluded';
+  // searches can surface very obscure uploads; Deezer's rank says how widely a song is played
+  if (['search', 'tag', 'region'].includes(c.src) && c.rank && c.rank < 60000) return 'obscure';
+  const tf = tempoFit(c, g); if (tf) return tf;
   if (c.src === 'search' && g.length) {
     const want = targetGenres();
     if (want.length && !g.some(x => want.some(w => x.includes(w) || w.includes(x)))) return 'off-genre';
@@ -859,6 +1034,7 @@ function rebuildTaste() {
 function score(c, pr) {
   let s = Math.random() * 0.5;
   if (c.src === 'seed') s += 0.6;                         // hand-picked for the event
+  if (tempoMode() === 'dance' && (c.seedUp || (c.bpm >= 112 && c.bpm <= 135))) s += 0.4;
   if (c.why) s += 0.8;
   if (pr.arts[c.artist0]) s += 0.8;                       // an artist you like
   const n = pr.mine[c.artist0] || 0;                      // …but not the same one 4 times
@@ -912,7 +1088,7 @@ function fillBuffer(min = 6) {
     try {
       let guard = 0;
       const base = () => seedQueue.length || queryQueue.length;
-      while (buffer.length < min && guard++ < 30 &&
+      while (buffer.length < min && guard++ < 40 &&
              (base() || tagQueue.length || sourceQueue.length || (matching() && tasteQueue.length))) {
         if (matching() && (tasteAt < 0 || state.picks.length - tasteAt >= 3)) rebuildTaste();
         const r = Math.random();
@@ -927,18 +1103,22 @@ function fillBuffer(min = 6) {
         // event lists: mostly hand-picked songs, with some search variety
         if (seedQueue.length && (!queryQueue.length || Math.random() < 0.8)) {
           const [title, artist] = seedQueue.shift();
-          const j = await api(`/search?type=track&market=from_token&limit=5&q=${encodeURIComponent(`track:"${title}" artist:"${artist}"`)}`);
-          const items = j?.tracks?.items || [];
-          const a = norm(artist), tt = norm(title);
-          const byArtist = t => t.artists.some(x => { const n = norm(x.name); return n === a || (n.length > 3 && (n.includes(a) || a.includes(n))); });
-          // the right song by the right artist — not a cover, live take or similarly named track
-          const hit = items.find(t => byArtist(t) && norm(t.name) === tt && !ALT_TAKE.test(t.name))
-                   || items.find(t => byArtist(t) && norm(t.name).startsWith(tt) && !ALT_TAKE.test(t.name));
-          accept(hit, '', 'seed');
+          const sk = key(title, artist);
+          let s = seedHits[sk];
+          if (s === undefined) { // look each curated song up once, then remember it in this browser
+            const j = await api(`/search?type=track&market=from_token&limit=5&q=${encodeURIComponent(`track:"${title}" artist:"${artist}"`)}`);
+            const items = j?.tracks?.items || [];
+            const a = norm(artist), tt = norm(title);
+            const byArtist = t => t.artists.some(x => { const n = norm(x.name); return n === a || (n.length > 3 && (n.includes(a) || a.includes(n))); });
+            // the right song by the right artist — not a cover, live take or similarly named track
+            const hit = items.find(t => byArtist(t) && norm(t.name) === tt && !ALT_TAKE.test(t.name))
+                     || items.find(t => byArtist(t) && norm(t.name).startsWith(tt) && !ALT_TAKE.test(t.name));
+            s = hit && hit.is_playable !== false && !JUNK.test(hit.name) ? simplify(hit) : 0;
+            seedHits[sk] = s; lsLater('pc_seedhits', seedHits);
+          }
+          if (s) acceptS(Object.assign({}, s, { src: 'seed' }, seedEnergy(sk)), '');
         } else if (queryQueue.length) await runQuery(queryQueue);
       }
-      // look things up for the next few songs in the background so cards appear quickly
-      buffer.slice(0, 4).forEach(c => { learnArtist(c).then(() => { if ((state.regions || []).length) vet(Object.assign({}, c)); }); });
     } catch (e) { console.warn(e); toast(e.message); }
   };
   // .finally always runs after this assignment, so the busy flag can never get stuck
@@ -1145,29 +1325,117 @@ function updateProgress() {
 }
 function deckMessage(html) { $('#deck').innerHTML = `<div class="center"><div>${html}</div></div>`; }
 
+/* ========================= ready queue ========================= */
+// Songs are fully checked (genre, tempo, origin) in the background and kept ready, so the next
+// card appears the moment you swipe. The ready list is saved with the playlist.
+const READY_TARGET = 6;
+let ready = [], readyKey = '', pumping = null, pumpProgress = null;
+let pumpStats = { checked: 0, skipped: 0, why: {} };
+const vetSig = () => JSON.stringify([poolSig(), state.exclude, state.noExplicit, state.allowUnknownOrigin, tempoMode()]);
+const skipSong = c => { seenSet.add(c.id); seenSet.add(key(c.name, c.artist0)); };
+const preloadArt = c => { if (c.image) { const i = new Image(); i.src = c.image; } };
+function persistReady() {
+  state.ready = ready.slice(0, 8).map(t => { const c = Object.assign({}, t); delete c._front; return c; });
+  state.readySig = vetSig(); save();
+}
+function preparePool() {
+  if (poolKey !== poolSig()) {
+    buildPool(); ready = [];
+    if (state.readySig === vetSig()) ready = (state.ready || []).filter(t => !seenSet.has(t.id));
+    ready.forEach(preloadArt);
+  } else if (readyKey && readyKey !== vetSig()) ready = [];
+  readyKey = vetSig();
+}
+function pump() {
+  if (pumping) return pumping;
+  pumping = (async () => {
+    let rounds = 0;
+    try {
+      while (ready.length < READY_TARGET && rounds++ < 30) {
+        if (buffer.length < 3) await fillBuffer(9);
+        if (!buffer.length) break;
+        const batch = [];
+        while (batch.length < 3 && buffer.length) batch.push(pickNext());
+        const res = await Promise.all(batch.map(c => vet(c).catch(e => { console.warn(e); return ''; })));
+        batch.forEach((c, i) => {
+          pumpStats.checked++;
+          if (res[i]) { skipSong(c); pumpStats.skipped++; const r = res[i].split(':')[0]; pumpStats.why[r] = (pumpStats.why[r] || 0) + 1; }
+          else if (!ready.some(x => x.id === c.id) && !seenSet.has(c.id)) { preloadArt(c); ready.push(c); }
+        });
+        if (readyKey === vetSig()) persistReady();
+        pumpProgress?.();
+      }
+    } catch (e) { console.warn(e); }
+  })().finally(() => { pumping = null; pumpProgress?.(); });
+  return pumping;
+}
+const outOfSongs = () => !ready.length && !buffer.length && !pumping && poolExhausted();
+
 async function nextCard() {
   current = null;
-  let c = null, skipped = 0, why = {};
-  for (let tries = 0; tries < 60 && !c; tries++) {
-    if (!buffer.length) { deckMessage(`<div class="spin"></div>${skipped > 8 ? 'Looking for songs that fit…' : 'Finding songs…'}`); await fillBuffer(6); }
-    if (!buffer.length) break;
-    const cand = pickNext();
-    if (skipped === 3) deckMessage('<div class="spin"></div>Checking songs…');
-    const no = await vet(cand);
-    if (no) { markSeen(cand); skipped++; why[no.split(':')[0]] = (why[no.split(':')[0]] || 0) + 1; continue; } // doesn't fit — skip quietly
-    c = cand;
+  if (!ready.length) {
+    deckMessage('<div class="spin"></div>Finding songs that fit…');
+    for (let i = 0; i < 4 && !ready.length; i++) { await pump(); if (poolExhausted() && !buffer.length) break; }
   }
-  if (!$('#s-swipe').classList.contains('on')) { if (c) { c._front = true; buffer.unshift(c); } return; } // left the screen meanwhile
-  if (!c) {
-    const regionMsg = why['unknown-origin'] > 3 && !state.allowUnknownOrigin
-      ? ' Tip: turn on “Allow songs if we can’t tell where they’re from” in ⚙︎.' : '';
-    if (poolExhausted()) { stopClip(); save(); toast('That\'s every song for these choices — review your picks.' + regionMsg, 5000); return go('review'); }
-    return deckMessage(`Couldn't find more songs that fit.${regionMsg ? '<br><br>' + regionMsg : ''}<br><br><button class="btn ghost" onclick="nextCard()">Try again</button>`);
+  if (!$('#s-swipe').classList.contains('on')) return; // left the screen meanwhile
+  if (!ready.length) {
+    const w = pumpStats.why;
+    const tip = w['unknown-origin'] > 3 && !state.allowUnknownOrigin ? 'Tip: turn on “Allow songs if we can’t tell where they’re from” in ⚙︎.'
+      : (w.slow > 5 && tempoMode() === 'dance') ? 'Tip: set Tempo to “Any tempo” in ⚙︎ for more songs.'
+      : (w.fast > 5 && tempoMode() === 'chill') ? 'Tip: set Tempo to “Any tempo” in ⚙︎ for more songs.' : '';
+    if (poolExhausted()) { stopClip(); save(); toast('That\'s every song for these choices — review your picks. ' + tip, 5000); return go('review'); }
+    return deckMessage(`Couldn't find more songs that fit.${tip ? '<br><br>' + tip : ''}<br><br><button class="btn ghost" onclick="nextCard()">Try again</button>`);
   }
-  current = c;
+  current = ready.shift();
+  persistReady();
   renderCard(current);
   playClip(current);
-  fillBuffer(6);
+  pump(); // top the queue back up in the background
+}
+
+/* ========================= loading screen ========================= */
+let loadSeq = 0, fromLoading = false;
+const TIPS = ['Swipe right to add a song, left to pass.', 'Clip missed the chorus? Tap −10 or +10.', 'Everything saves as you go — tap Save & exit anytime.',
+  '✨ Matching steers songs toward the ones you add.', 'Export early from the Export button and keep going later.', 'Change genres, tempo or regions anytime with ⚙︎.'];
+async function startSession() {
+  stopClip(); current = null;
+  const seq = ++loadSeq, t0 = Date.now(), target = 4;
+  preparePool();
+  pumpStats = { checked: 0, skipped: 0, why: {} };
+  go('loading');
+  $('#ldTitle').textContent = state.title;
+  let spot = IS_MOBILE ? 'active' : 'done', tipI = Math.floor(Math.random() * TIPS.length);
+  const render = () => {
+    if (seq !== loadSeq) return;
+    const n = Math.min(ready.length, target), checking = pumpStats.checked > 0;
+    $('#ldBar').style.width = Math.max(6, n / target * 100) + '%';
+    const step = (st, label, sub) => `<li class="${st}"><span class="dot">${st === 'done' ? '✓' : st === 'warn' ? '!' : ''}</span><span>${label}${sub ? `<small>${sub}</small>` : ''}</span></li>`;
+    $('#ldSteps').innerHTML =
+      step('done', 'Reading your choices', esc(evLabels())) +
+      step(n >= target ? 'done' : 'active', 'Finding songs that fit', `${n} of ${target} ready`) +
+      step(n >= target ? 'done' : checking ? 'active' : '', tempoMode() === 'any' ? 'Checking genre & quality' : `Checking genre, quality & ${TEMPOS[tempoMode()].label.toLowerCase()} tempo`,
+           checking ? `${pumpStats.checked} songs checked${pumpStats.skipped ? ` · ${pumpStats.skipped} skipped` : ''}` : '') +
+      (IS_MOBILE ? step(spot, 'Connecting to Spotify on your phone', spot === 'warn' ? 'Open the Spotify app and play any song for a second — clips will start there.' : '') : '');
+  };
+  const tipTimer = setInterval(() => { const el = $('#ldTip'); el.style.opacity = 0; setTimeout(() => { el.textContent = TIPS[tipI++ % TIPS.length]; el.style.opacity = 1; }, 300); }, 3800);
+  $('#ldTip').textContent = TIPS[tipI++ % TIPS.length];
+  pumpProgress = render; render();
+  const device = (async () => {
+    await initPlayer();
+    if (playbackMode === 'connect' && !connectDevice) { try { await findDevice(); } catch {} }
+    spot = playbackMode !== 'connect' || connectDevice ? 'done' : 'warn'; render();
+  })();
+  while (ready.length < target && Date.now() - t0 < 30000 && seq === loadSeq) {
+    await Promise.race([pump(), sleep(1500)]);
+    if (!pumping && poolExhausted() && !buffer.length) break;
+  }
+  await Promise.race([device, sleep(3000)]);
+  const wait = 1400 - (Date.now() - t0); if (wait > 0) await sleep(wait); // long enough to read, short enough not to drag
+  clearInterval(tipTimer);
+  if (seq !== loadSeq || !$('#s-loading').classList.contains('on')) return;
+  pumpProgress = null;
+  fromLoading = true; go('swipe'); fromLoading = false;
+  nextCard();
 }
 function renderCard(t) {
   const deck = $('#deck');
@@ -1176,7 +1444,7 @@ function renderCard(t) {
       <div class="art" style="background-image:url('${esc(t.image)}')">
         <div class="stamp like">ADD</div><div class="stamp nope">PASS</div>
       </div>
-      <div class="meta">${t.why ? `<div class="why">✨ ${esc(t.why)}</div>` : ''}<h3>${esc(t.name)}</h3><p>${esc(t.artists)}</p><p class="sub">${t.iso ? `${flag(t.iso)} ${esc(countryName(t.iso))} · ` : ''}${esc(t.album)} · ${fmt(t.dur)}</p></div>
+      <div class="meta">${t.why ? `<div class="why">✨ ${esc(t.why)}</div>` : ''}<h3>${esc(t.name)}</h3><p>${esc(t.artists)}</p><p class="sub">${t.iso ? `${flag(t.iso)} ${esc(countryName(t.iso))} · ` : ''}${esc(t.album)} · ${fmt(t.dur)}${t.bpm ? ` · ♩ ${t.bpm} BPM` : ''}</p></div>
       <div class="player">
         <button class="pbtn" id="backBtn" title="Back 10s">−10</button>
         <div class="ring"><svg viewBox="0 0 60 60"><circle class="bg" cx="30" cy="30" r="26"/><circle class="fg" id="ringFg" cx="30" cy="30" r="26"/></svg>
@@ -1243,8 +1511,8 @@ function undo() {
   if (!h || busy) return toast('Nothing to undo');
   if (h.action === 'add') state.picks = state.picks.filter(p => p.id !== h.track.id);
   else state.passArtists[h.track.artist0] = Math.max(0, (state.passArtists[h.track.artist0] || 1) - 1);
-  if (current) { current._front = true; buffer.unshift(current); }
-  h.track._front = true; buffer.unshift(h.track);
+  if (current) ready.unshift(current);
+  ready.unshift(h.track);
   save(); updateProgress(); stopClip();
   toast(h.action === 'add' ? 'Removed — swipe it again' : 'Brought it back');
   nextCard();
@@ -1276,17 +1544,18 @@ function renderReview() {
 }
 const safeName = () => (state.title || 'playlist').replace(/[\\/:*?"<>|]+/g, '').trim().slice(0, 80) || 'playlist';
 function exportExcel() {
-  const rows = state.picks.map((t, i) => ({ '#': i + 1, Title: t.name, Artist: t.artists, Album: t.album, Duration: fmt(t.dur), From: t.iso ? countryName(t.iso) : '', 'Spotify Link': t.url }));
+  const rows = state.picks.map((t, i) => ({ '#': i + 1, Title: t.name, Artist: t.artists, Album: t.album, Duration: fmt(t.dur), BPM: t.bpm || '', From: t.iso ? countryName(t.iso) : '', 'Spotify Link': t.url }));
   if (!window.XLSX) {
     const csv = [Object.keys(rows[0]).join(',')].concat(rows.map(r => Object.values(r).map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))).join('\n');
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = safeName() + '.csv'; a.click();
     return toast('Excel library unavailable offline — saved as CSV (opens in Excel)');
   }
   const ws = XLSX.utils.json_to_sheet(rows);
-  ws['!cols'] = [{ wch: 4 }, { wch: 38 }, { wch: 30 }, { wch: 30 }, { wch: 9 }, { wch: 18 }, { wch: 48 }];
-  rows.forEach((r, i) => { const ref = XLSX.utils.encode_cell({ r: i + 1, c: 6 }); if (ws[ref]) ws[ref].l = { Target: r['Spotify Link'] }; });
+  ws['!cols'] = [{ wch: 4 }, { wch: 38 }, { wch: 30 }, { wch: 30 }, { wch: 9 }, { wch: 6 }, { wch: 18 }, { wch: 48 }];
+  rows.forEach((r, i) => { const ref = XLSX.utils.encode_cell({ r: i + 1, c: 7 }); if (ws[ref]) ws[ref].l = { Target: r['Spotify Link'] }; });
   const info = XLSX.utils.aoa_to_sheet([
     ['Playlist', state.title], ['Mix', evLabels()],
+    ['Tempo', TEMPOS[tempoMode()].label],
     ['From', (state.regions || []).length ? state.regions.map(r => REGIONS[r]?.label).join(', ') : 'Anywhere'],
     ['Left out', state.exclude.map(k => TAGS[k]?.label).filter(Boolean).join(', ') + (state.noExplicit ? (state.exclude.length ? ', ' : '') + 'explicit songs' : '') || '—'],
     ['Target length', `${state.hours} hours`], ['Songs', state.picks.length], ['Total length', fmtLong(pickedMs())],
@@ -1366,7 +1635,8 @@ function newList() { stopClip(); state = freshState(); resetPool(); go('title');
 function go(stage, persist = true) {
   if (stage !== 'swipe') stopClip();
   $$('.screen').forEach(s => s.classList.toggle('on', s.id === 's-' + stage));
-  if (persist && stage !== 'connect' && stage !== 'home') { state.stage = stage; save(); }
+  if (persist && !['connect', 'home', 'loading'].includes(stage)) { state.stage = stage; save(); }
+  if (stage !== 'loading') { loadSeq++; pumpProgress = null; }
   if (stage === 'home') renderHome();
   window.scrollTo(0, 0);
   if (stage === 'title') { $('#title').value = state.title; $('#btnTitleNext').disabled = !state.title.trim(); setTimeout(() => $('#title').focus(), 50); }
@@ -1376,10 +1646,16 @@ function go(stage, persist = true) {
   if (stage === 'review') renderReview();
   if (stage === 'swipe') {
     updateProgress(); updateMatchBtn();
-    if (poolKey !== poolSig()) buildPool();
-    if (current) { renderCard(current); playClip(current); }
-    else deckMessage('<button class="btn primary" id="btnResume">▶ Start swiping</button><p class="hint">Each song plays a 15-second bite.</p>');
-    const r = $('#btnResume'); if (r) r.onclick = () => { player?.activateElement?.(); nextCard(); };
+    const sigBefore = readyKey;
+    preparePool();
+    if (current && sigBefore === readyKey) { renderCard(current); playClip(current); }
+    else if (ready.length) {
+      if (current) { current = null; stopClip(); }
+      deckMessage('<button class="btn primary" id="btnResume">▶ Start swiping</button><p class="hint">Each song plays a 15-second bite.</p>');
+      const r = $('#btnResume'); r.onclick = () => { player?.activateElement?.(); nextCard(); };
+      pump();
+    } else if (fromLoading) { current = null; }
+    else { current = null; setTimeout(startSession, 0); }
   }
 }
 function updateMatchBtn() {
@@ -1405,7 +1681,12 @@ function renderEvents() {
     </button>`).join('');
   $('#customWrap').style.display = state.events.includes('custom') ? 'block' : 'none';
   $('#custom').value = state.custom;
-  $('#incTags').innerHTML = Object.entries(TAGS).map(([k, t]) => `<button class="tag ${state.include.includes(k) ? 'on' : ''}" data-tag="${k}">${esc(t.label)}</button>`).join('');
+  $('#incTags').innerHTML = tagGroupsHtml(k => state.include.includes(k) ? 'on' : '');
+  const tm = tempoMode();
+  $('#tempoTags').innerHTML = Object.entries(TEMPOS).map(([k, t]) => `<button class="tag ${tm === k ? 'on' : ''}" data-tempo="${k}">${t.icon} ${esc(t.label)}</button>`).join('');
+  const evName = state.events.map(k => EVENTS[k]?.label).filter(Boolean)[0];
+  $('#tempoHint').textContent = !state.tempoSet && tm !== 'any' && evName ? `suggested for ${evName}` : '';
+  $('#tempoDesc').textContent = TEMPOS[tm].desc;
   const regs = state.regions || [];
   $('#regTags').innerHTML = `<button class="tag ${regs.length ? '' : 'on'}" data-reg="">🌎 Anywhere</button>` +
     Object.entries(REGIONS).map(([k, r]) => `<button class="tag ${regs.includes(k) ? 'on' : ''}" data-reg="${k}">${REGION_ICON[k]} ${esc(r.label)}</button>`).join('');
@@ -1415,7 +1696,7 @@ function renderEvents() {
 }
 function updateIncNext() { $('#btnIncNext').disabled = !hasChoices(); }
 function renderExclude() {
-  $('#excTags').innerHTML = Object.entries(TAGS).map(([k, t]) => `<button class="tag ${state.exclude.includes(k) ? 'x' : ''}" data-tag="${k}">${esc(t.label)}</button>`).join('');
+  $('#excTags').innerHTML = tagGroupsHtml(k => state.exclude.includes(k) ? 'x' : '');
   $('#noExplicit').checked = !!state.noExplicit;
 }
 const toggleIn = (arr, k) => arr.includes(k) ? arr.filter(x => x !== k) : arr.concat(k);
@@ -1478,7 +1759,12 @@ $('#srcList').addEventListener('click', e => {
 });
 $('#srcCards').onchange = e => { state.sourceCards = e.target.checked; save(); };
 $('#btnFilters').onclick = () => go('event');
-$('#btnStart').onclick = () => { player?.activateElement?.(); current = null; go('swipe'); nextCard(); };
+$('#btnStart').onclick = () => { player?.activateElement?.(); startSession(); };
+$('#ldBack').onclick = () => go('event');
+$('#tempoTags').addEventListener('click', e => {
+  const b = e.target.closest('[data-tempo]'); if (!b) return;
+  state.tempo = b.dataset.tempo; state.tempoSet = true; save(); renderEvents();
+});
 $$('[data-go]').forEach(b => b.onclick = () => go(b.dataset.go));
 $('#btnYes').onclick = () => decide('add');
 $('#btnNo').onclick = () => decide('pass');
