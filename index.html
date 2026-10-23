@@ -1094,13 +1094,13 @@ async function vet(c) {
   // Spotify has no genres for this artist: ask MusicBrainz when a filter needs them
   if (!g.length && (state.exclude.length || c.src === 'search')) { await mbLookup(c.artist0); g = genresOf(c); }
   const custom = customWords().join(' ');
-  const junk = g.find(x => JUNK_GENRES.test(x) && !custom.includes(x.split(' ')[0]));
+  const junk = c.src !== 'source' && g.find(x => JUNK_GENRES.test(x) && !custom.includes(x.split(' ')[0]));
   if (junk) return 'junk:' + junk;
   // a song that matches a genre you picked is kept even if it also touches a left-out one
   // (e.g. "indie R&B" when you picked Modern R&B but not Indie)
   const picked = state.include.some(k => TAGS[k] && tagHit(TAGS[k], g, c.year));
   // songs from an attached playlist skip the automatic "genres you didn't pick" list — you added them on purpose
-  const exList = c.src === 'source' && state.excludeAuto ? state.exclude.filter(k => TAGS[k]?.custom) : state.exclude;
+  const exList = c.src === 'source' ? [] : state.exclude; // attached playlists always come through, whatever genres you picked or left out
   if (!picked && exList.some(k => TAGS[k] && tagHit(TAGS[k], g, c.year))) return 'excluded';
   if (focusKind() === 'tag') { const t = TAGS[focusKey()]; if (t && (g.length ? !tagHit(t, g, c.year) : c.tag !== focusKey())) return 'off-focus'; }
   if (focusKind() === 'src' && !(c.src === 'source' && c.srcId === focusKey())) return 'off-focus';
