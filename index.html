@@ -105,6 +105,20 @@ body.touch .keys{display:none}
 .tags{display:flex;flex-wrap:wrap;gap:8px}
 .tgh{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;font-weight:700;margin:14px 0 7px}
 .tgh:first-child{margin-top:2px}
+.gsearch{position:relative;margin:2px 0 6px}
+.gsearch .text{font-size:16px;padding:12px 14px 12px 40px}
+.gsearch::before{content:"⌕";position:absolute;left:14px;top:9px;font-size:20px;color:var(--muted);pointer-events:none}
+.gsugs{position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--panel2);border:1px solid var(--line);border-radius:12px;z-index:30;max-height:300px;overflow:auto;box-shadow:0 14px 36px #000a}
+.gsugs[hidden]{display:none}
+.gsug{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;padding:11px 14px;font-size:15px;border-bottom:1px solid var(--line)}
+.gsug:last-child{border-bottom:0}
+.gsug:hover,.gsug.hl{background:#ffffff10}
+.gsug span{font-size:12px;color:var(--muted);white-space:nowrap}
+.gsug b{font-weight:600}
+.tag.mine::after{content:" ✕";opacity:.7}
+.autoNote{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;background:#1ed76012;border:1px solid #1ed76055;border-radius:12px;padding:11px 12px;font-size:14px;color:#d6d6e0;margin-bottom:12px}
+.autoNote[hidden]{display:none}
+.autoNote button{color:var(--green);font-weight:600;white-space:nowrap;font-size:13px;text-decoration:underline}
 .tag{padding:8px 13px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:14px}
 .tag.on{background:#1ed76020;border-color:var(--green);color:var(--green);font-weight:600}
 .tag.x{background:#ff4f7b1c;border-color:var(--pink);color:var(--pink);font-weight:600;text-decoration:line-through}
@@ -296,6 +310,7 @@ ul.tracks .rm:hover{background:var(--panel2);color:var(--pink)}
     <div class="tags" id="tempoTags"></div>
     <p class="hint" id="tempoDesc"></p>
     <h3 class="sec">Genres &amp; eras <span>optional · pick any</span></h3>
+    <div class="gsearch"><input class="text" id="incSearch" placeholder="Search or type any genre — e.g. yacht rock, city pop" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"><div class="gsugs" id="incSugs" hidden></div></div>
     <div id="incTags"></div>
     <h3 class="sec">Where the music is from <span>pick any</span></h3>
     <div class="tags" id="regTags"></div>
@@ -313,6 +328,8 @@ ul.tracks .rm:hover{background:var(--panel2);color:var(--pink)}
     <div class="step">Step 4 of 4</div>
     <h1>What shouldn't come up?</h1>
     <p class="lead">Tap anything to keep out. Matching songs are skipped automatically.</p>
+    <div class="autoNote" id="autoNote" hidden><span id="autoNoteTxt"></span><button id="btnAutoClear">Clear all</button></div>
+    <div class="gsearch"><input class="text" id="excSearch" placeholder="Search or type a genre to leave out" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"><div class="gsugs" id="excSugs" hidden></div></div>
     <div id="excTags"></div>
     <label class="tgl"><input type="checkbox" id="noExplicit"> No explicit songs</label>
     <div class="row"><button class="btn primary" id="btnStart">Start swiping →</button></div>
@@ -560,8 +577,43 @@ const TAG_GROUPS = [
   ['Latin & global', ['latin', 'regmex', 'tropical', 'afro', 'amapiano', 'dancehall', 'bollywood']],
   ['Jazz & standards', ['jazz', 'broadway']]
 ];
+// Real Spotify genre names offered as you type (plus any genres the app has seen on artists).
+// Anything else you type is accepted too and matched against artists' Spotify genres.
+const MORE_GENRES = ('a cappella|acid house|acid jazz|adult contemporary|afro r&b|afro soul|afrobeat|afropop|alt country|alt z|alternative dance|alternative hip hop|alternative metal|alternative r&b|ambient pop|americana|anime|arabic pop|art pop|art rock|australian hip hop|bachata|baile funk|baroque pop|bass house|bedroom pop|big band|big room|bluegrass|blues|blues rock|bolero|boogie|boom bap|bossa nova|brazilian funk|breakbeat|britpop|brostep|c-pop|cajun|calypso|canadian hip hop|cantopop|celtic|chamber pop|chicago house|chillwave|chiptune|christian hip hop|christian pop|city pop|classic soul|classical|club|comedy rap|contemporary christian|contemporary country|contemporary jazz|cool jazz|corridos tumbados|country rap|country rock|crunk|cumbia|dance pop|dance rock|dancehall|dark pop|deep house|dembow|desi hip hop|detroit techno|disco house|doo-wop|downtempo|dream pop|drill|drum and bass|dub|dubstep|east coast hip hop|easy listening|edm|electro house|electro swing|electroclash|electronica|electropop|emo|emo rap|eurodance|europop|experimental hip hop|filmi|flamenco|folk pop|folk rock|freestyle|french house|funk|funk carioca|future bass|g funk|gangster rap|garage rock|gen z|glam rock|gospel|grime|grunge|hard house|hard rock|hardstyle|heartland rock|hi-nrg|highlife|hip house|honky tonk|house|hyperpop|indie folk|indie pop|indie r&b|indie rock|indie soul|indietronica|irish folk|italo disco|j-pop|j-rock|jazz funk|jazz rap|jersey club|jungle|k-pop|k-r&b|kizomba|latin alternative|latin hip hop|latin pop|latin rock|lo-fi|lounge|madchester|mambo|mandopop|mariachi|math rock|melodic house|melodic rap|melodic techno|merengue|metalcore|miami bass|minimal techno|modern rock|moombahton|motown|mpb|musica mexicana|neo soul|neo-psychedelic|new jack swing|new romantic|new wave|norteno|northern soul|nu disco|nu metal|old school hip hop|opm|outlaw country|philly soul|phonk|piano rock|pop punk|pop rap|pop rock|pop soul|post-grunge|post-punk|power pop|progressive house|psychedelic rock|punjabi pop|punk|quiet storm|r&b|ragtime|rage rap|reggae|reggae fusion|reggaeton|regional mexican|retro soul|rock and roll|rockabilly|roots reggae|salsa|samba|sertanejo|shoegaze|show tunes|singer-songwriter|ska|smooth jazz|soca|soft rock|soul|soul blues|southern hip hop|southern rock|space disco|surf rock|swing|synth funk|synth-pop|synthwave|tango|tech house|techno|texas country|trance|trap|trap latino|tropical house|uk drill|uk funky|uk garage|uk hip hop|urbano latino|vaporwave|vocal house|vocal jazz|west coast hip hop|western swing|yacht rock|zouk').split('|');
+const titleCase = s => s.replace(/\b([a-z])/g, (m, c) => c.toUpperCase()).replace(/\bR&b\b/, 'R&B').replace(/\b(Edm|Uk|Mpb|Opm)\b/g, m => m.toUpperCase());
+const customKey = g => 'cg_' + g.toLowerCase().replace(/[^a-z0-9&]+/g, '-').replace(/^-|-$/g, '');
+function registerCustom(defs) { Object.entries(defs || {}).forEach(([k, d]) => { TAGS[k] = Object.assign({ custom: true }, d); }); }
+function makeCustomGenre(text) {
+  const g = text.trim().toLowerCase().replace(/\s+/g, ' ');
+  const k = customKey(g);
+  const d = { label: titleCase(g), g: [g], q: `genre:"${g}"` };
+  state.customTags = Object.assign({}, state.customTags, { [k]: d });
+  registerCustom({ [k]: d });
+  return k;
+}
+// A typed genre that's already in the list maps to that option instead of creating a new one
+function findTag(text) {
+  const t = text.trim().toLowerCase();
+  return Object.keys(TAGS).find(k => TAGS[k].label.toLowerCase() === t || (TAGS[k].g.length === 1 && TAGS[k].g[0] === t)) || '';
+}
+function genreSuggestions(text) {
+  const t = text.trim().toLowerCase(); if (!t) return [];
+  const out = [], seen = new Set();
+  const push = (k, label, note) => { const id = k || label.toLowerCase(); if (seen.has(id)) return; seen.add(id); out.push({ k, label, note }); };
+  const score = s => s.startsWith(t) ? 0 : s.split(/[\s&-]+/).some(w => w.startsWith(t)) ? 1 : s.includes(t) ? 2 : 9;
+  const builtIn = Object.entries(TAGS).filter(([k, d]) => !d.custom).map(([k, d]) => [score(d.label.toLowerCase()), k, d.label]);
+  builtIn.filter(x => x[0] < 9).sort((a, b) => a[0] - b[0]).slice(0, 4).forEach(([, k, l]) => push(k, l, 'in the list'));
+  const learned = new Set(Object.values(genreCache).flat());
+  const pool = [...new Set(MORE_GENRES.concat([...learned]))].map(g => [score(g), g]).filter(x => x[0] < 9);
+  pool.sort((a, b) => a[0] - b[0] || a[1].length - b[1].length).slice(0, 8).forEach(([, g]) => { const k = findTag(g); push(k, k ? TAGS[k].label : titleCase(g), k ? 'in the list' : 'Spotify genre'); });
+  if (!out.some(o => o.label.toLowerCase() === t)) push('', titleCase(t), 'add your own');
+  return out.slice(0, 9);
+}
 const tagGroupsHtml = cls => TAG_GROUPS.map(([label, keys]) => `<div class="tgh">${label}</div><div class="tags">${
   keys.filter(k => TAGS[k]).map(k => `<button class="tag ${cls(k)}" data-tag="${k}">${esc(TAGS[k].label)}</button>`).join('')}</div>`).join('');
+// Genres you typed in, shown above the built-in groups
+const customGroupHtml = (keys, cls, removable) => keys.length ? `<div class="tgh">Your genres</div><div class="tags">${
+  keys.map(k => `<button class="tag ${removable ? 'mine' : ''} ${cls(k)}" data-tag="${k}" ${removable ? 'title="Tap to remove"' : ''}>${esc(TAGS[k].label)}</button>`).join('')}</div>` : '';
 function tagHit(tag, genres, year) {
   if (tag.y && !(+year >= tag.y[0] && +year <= tag.y[1])) return false;
   return genres.some(g => tag.g.some(x => g.includes(x)));
@@ -594,9 +646,14 @@ const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2
 const freshState = () => ({ id: newId(), created: Date.now(), updated: Date.now(), stage: 'title', title: '', hours: 3, event: '', custom: '',
   picks: [], seen: [], history: [], passArtists: {}, match: true, spotifyId: null, spotifyUrl: null,
   events: [], include: [], exclude: [], noExplicit: false, sources: [], sourceTracks: [], sourceCards: true,
-  regions: [], allowUnknownOrigin: false, tempo: 'any', tempoSet: false, ready: [], readySig: '' });
+  regions: [], allowUnknownOrigin: false, tempo: 'any', tempoSet: false, ready: [], readySig: '', customTags: {}, excludeAuto: true });
 // older saves stored a single event
-const normalize = s => { if ((!s.events || !s.events.length) && s.event) s.events = [s.event]; delete s.event; return s; };
+const normalize = s => {
+  if ((!s.events || !s.events.length) && s.event) s.events = [s.event]; delete s.event;
+  registerCustom(s.customTags);
+  if (s.excludeAuto === undefined) s.excludeAuto = !(s.exclude || []).length;
+  return s;
+};
 const evLabels = (s = state) => [
   ...(s.events || []).map(k => k === 'custom' ? (s.custom ? `“${s.custom}”` : '') : EVENTS[k]?.label),
   ...(s.include || []).map(k => TAGS[k]?.label)
@@ -960,7 +1017,8 @@ function tempoFit(c, g) {
 /* ========================= is this song a good fit? ========================= */
 function targetGenres() {
   const w = new Set();
-  state.events.forEach(k => (EVENT_GENRES[k] || []).forEach(x => w.add(x)));
+  // once you've picked genres, searches have to match those (not just the event's broad mix)
+  if (!state.include.length) state.events.forEach(k => (EVENT_GENRES[k] || []).forEach(x => w.add(x)));
   if (state.events.includes('custom')) customWords().forEach(x => w.add(x));
   state.include.forEach(k => (TAGS[k]?.g || []).forEach(x => w.add(x)));
   state.picks.concat(state.sourceTracks).forEach(p => genresOf(p).forEach(g => w.add(g)));
@@ -978,7 +1036,10 @@ async function vet(c) {
   const custom = customWords().join(' ');
   const junk = g.find(x => JUNK_GENRES.test(x) && !custom.includes(x.split(' ')[0]));
   if (junk) return 'junk:' + junk;
-  if (state.exclude.some(k => TAGS[k] && tagHit(TAGS[k], g, c.year))) return 'excluded';
+  // a song that matches a genre you picked is kept even if it also touches a left-out one
+  // (e.g. "indie R&B" when you picked Modern R&B but not Indie)
+  const picked = state.include.some(k => TAGS[k] && tagHit(TAGS[k], g, c.year));
+  if (!picked && state.exclude.some(k => TAGS[k] && tagHit(TAGS[k], g, c.year))) return 'excluded';
   // searches can surface very obscure uploads; Deezer's rank says how widely a song is played
   if (['search', 'tag', 'region'].includes(c.src) && c.rank && c.rank < 60000) return 'obscure';
   const tf = tempoFit(c, g); if (tf) return tf;
@@ -1681,7 +1742,8 @@ function renderEvents() {
     </button>`).join('');
   $('#customWrap').style.display = state.events.includes('custom') ? 'block' : 'none';
   $('#custom').value = state.custom;
-  $('#incTags').innerHTML = tagGroupsHtml(k => state.include.includes(k) ? 'on' : '');
+  const mine = Object.keys(state.customTags || {}).filter(k => TAGS[k] && state.include.includes(k));
+  $('#incTags').innerHTML = customGroupHtml(mine, () => 'on', true) + tagGroupsHtml(k => state.include.includes(k) ? 'on' : '');
   const tm = tempoMode();
   $('#tempoTags').innerHTML = Object.entries(TEMPOS).map(([k, t]) => `<button class="tag ${tm === k ? 'on' : ''}" data-tempo="${k}">${t.icon} ${esc(t.label)}</button>`).join('');
   const evName = state.events.map(k => EVENTS[k]?.label).filter(Boolean)[0];
@@ -1695,8 +1757,26 @@ function renderEvents() {
   renderSources(); updateIncNext();
 }
 function updateIncNext() { $('#btnIncNext').disabled = !hasChoices(); }
+// Every built-in genre you didn't pick. Songs that match a genre you did pick are still kept
+// (see vet), so picking "Trap" leaves out other hip-hop but never trap itself.
+function autoExcludes() {
+  if (!state.include.length) return [];
+  return Object.keys(TAGS).filter(k => !TAGS[k].custom && !state.include.includes(k));
+}
+function applyAutoExclude() {
+  if (!state.excludeAuto) return;
+  const custom = state.exclude.filter(k => TAGS[k]?.custom);
+  state.exclude = autoExcludes().concat(custom); save();
+}
 function renderExclude() {
-  $('#excTags').innerHTML = tagGroupsHtml(k => state.exclude.includes(k) ? 'x' : '');
+  applyAutoExclude();
+  const n = state.exclude.filter(k => !TAGS[k]?.custom).length;
+  $('#autoNote').hidden = !(state.include.length && n);
+  $('#autoNoteTxt').textContent = state.excludeAuto
+    ? `To keep the focus on what you picked, the ${n} genres you didn't choose are left out. Tap any to allow it.`
+    : `${n} genres left out. Tap any to allow it.`;
+  const mine = Object.keys(state.customTags || {}).filter(k => TAGS[k]);
+  $('#excTags').innerHTML = customGroupHtml(mine, k => state.exclude.includes(k) ? 'x' : '') + tagGroupsHtml(k => state.exclude.includes(k) ? 'x' : '');
   $('#noExplicit').checked = !!state.noExplicit;
 }
 const toggleIn = (arr, k) => arr.includes(k) ? arr.filter(x => x !== k) : arr.concat(k);
@@ -1719,12 +1799,63 @@ $('#events').addEventListener('click', e => {
   if (state.events.includes('custom') && b.dataset.ev === 'custom') $('#custom').focus();
 });
 $('#custom').addEventListener('input', e => { state.custom = e.target.value.trim(); save(); updateIncNext(); });
+function setInclude(k, on) {
+  state.include = on ? [...new Set(state.include.concat(k))] : state.include.filter(x => x !== k);
+  if (on && state.exclude.includes(k)) {
+    state.exclude = state.exclude.filter(x => x !== k);
+    if (!state.excludeAuto) toast(`Removed ${TAGS[k].label} from "leave out"`);
+  }
+  save(); renderEvents();
+}
 $('#incTags').addEventListener('click', e => {
   const b = e.target.closest('.tag'); if (!b) return; const k = b.dataset.tag;
-  state.include = toggleIn(state.include, k);
-  if (state.include.includes(k) && state.exclude.includes(k)) { state.exclude = state.exclude.filter(x => x !== k); toast(`Removed ${TAGS[k].label} from "leave out"`); }
-  save(); renderEvents();
+  setInclude(k, !state.include.includes(k));
 });
+// Search box with suggestions, used on both genre screens
+function genreSearch(input, list, onPick) {
+  let hl = -1, items = [];
+  const close = () => { list.hidden = true; hl = -1; };
+  const show = () => {
+    items = genreSuggestions(input.value);
+    if (!items.length) return close();
+    list.innerHTML = items.map((s, i) => `<button class="gsug ${i === hl ? 'hl' : ''}" data-i="${i}"><b>${esc(s.label)}</b><span>${esc(s.note)}</span></button>`).join('');
+    list.hidden = false;
+  };
+  const pick = i => {
+    const s = items[i] || { k: findTag(input.value), label: input.value };
+    if (!s.label.trim()) return;
+    const known = s.k || findTag(s.label);
+    onPick(known || makeCustomGenre(s.label), !known);
+    input.value = ''; close(); input.blur();
+  };
+  input.addEventListener('input', () => { hl = -1; show(); });
+  input.addEventListener('focus', show);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); hl = Math.max(0, Math.min(items.length - 1, hl + (e.key === 'ArrowDown' ? 1 : -1))); show(); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (input.value.trim()) pick(hl >= 0 ? hl : (items[0] && items[0].label.toLowerCase() === input.value.trim().toLowerCase() ? 0 : -1)); }
+    else if (e.key === 'Escape') close();
+  });
+  list.addEventListener('pointerdown', e => e.preventDefault()); // keep the keyboard up while tapping
+  list.addEventListener('click', e => { const b = e.target.closest('.gsug'); if (b) pick(+b.dataset.i); });
+  document.addEventListener('click', e => { if (!e.target.closest('.gsearch')) close(); });
+}
+genreSearch($('#incSearch'), $('#incSugs'), async (k, isNew) => {
+  setInclude(k, true);
+  toast(`Added ${TAGS[k].label}`);
+  if (isNew) { // let them know if Spotify has never heard of it
+    try {
+      const j = await api(`/search?type=artist&limit=1&q=${encodeURIComponent(TAGS[k].q)}`);
+      if (!(j?.artists?.items || []).length) toast(`Spotify has no artists tagged “${TAGS[k].label}” — songs will only match it through artists' genres. A broader genre may work better.`, 6000);
+    } catch {}
+  }
+});
+genreSearch($('#excSearch'), $('#excSugs'), k => {
+  if (!state.exclude.includes(k)) state.exclude = state.exclude.concat(k);
+  if (state.include.includes(k)) { state.include = state.include.filter(x => x !== k); toast(`Removed ${TAGS[k].label} from "include"`); }
+  else toast(`Leaving out ${TAGS[k].label}`);
+  save(); renderExclude();
+});
+$('#btnAutoClear').onclick = () => { state.exclude = state.exclude.filter(k => TAGS[k]?.custom); state.excludeAuto = false; save(); renderExclude(); };
 $('#regTags').addEventListener('click', e => {
   const b = e.target.closest('[data-reg]'); if (!b) return;
   const k = b.dataset.reg;
@@ -1734,6 +1865,7 @@ $('#regTags').addEventListener('click', e => {
 $('#allowUnknown').onchange = e => { state.allowUnknownOrigin = e.target.checked; save(); };
 $('#excTags').addEventListener('click', e => {
   const b = e.target.closest('.tag'); if (!b) return; const k = b.dataset.tag;
+  state.excludeAuto = false; // you've made it your own — stop auto-filling
   state.exclude = toggleIn(state.exclude, k);
   if (state.exclude.includes(k) && state.include.includes(k)) { state.include = state.include.filter(x => x !== k); toast(`Removed ${TAGS[k].label} from "include"`); }
   save(); renderExclude();
@@ -1835,6 +1967,7 @@ document.addEventListener('keydown', e => {
     return go('connect', false);
   }
   initPlayer();
+  Object.values(lists).forEach(p => registerCustom(p.customTags));
   if (Object.keys(lists).length) go('home'); else newList();
 })();
 </script>
