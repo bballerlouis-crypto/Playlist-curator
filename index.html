@@ -26,6 +26,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;ma
 .logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--green),#0fa3a3);display:grid;place-items:center;font-size:16px}
 .who{font-size:13px;color:var(--muted);display:flex;gap:10px;align-items:center}
 .who button{color:var(--muted);text-decoration:underline;font-size:13px}
+.who[hidden]{display:none}
 .screen{display:none;animation:fade .25s ease}
 .screen.on{display:block}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -207,7 +208,12 @@ ul.tracks .rm:hover{background:var(--panel2);color:var(--pink)}
     <h1>Connect Spotify</h1>
     <p class="lead">Swipe through songs, hear the hook, and build the playlist for your event.</p>
     <div id="envWarn"></div>
-    <div class="panel">
+    <div id="quickLogin">
+      <button class="btn primary wide" id="btnQuickLogin">Log in with Spotify</button>
+      <p class="hint">Needs Spotify Premium. If you get stuck after logging in, ask whoever shared this app to add your Spotify email to its list.</p>
+      <button class="linkbtn" id="btnOwnApp">Use a different Spotify app</button>
+    </div>
+    <div class="panel" id="setupPanel">
       <ol class="setup">
         <li>Create an app at <span class="code">developer.spotify.com/dashboard</span> (check Web API, plus Web Playback SDK if you'll also use a computer).</li>
         <li>Add this exact Redirect URI: <span class="code" id="redirectUri"></span></li>
@@ -529,12 +535,15 @@ const targetMs = () => state.hours * 3600000;
 const pickedMs = () => state.picks.reduce((a, t) => a + t.dur, 0);
 
 /* ========================= Spotify auth (PKCE) ========================= */
-const clientId = () => LS.get('pc_client_id', '');
+// Built-in Spotify app, so people only need to log in. Its Redirect URIs (Spotify dashboard → Settings)
+// must include this site's address. A Client ID is public by design; it isn't a password.
+const DEFAULT_CLIENT_ID = 'ac26b229ef2e41ea9850edb521635dab';
+const clientId = () => LS.get('pc_client_id', '') || DEFAULT_CLIENT_ID;
 const randStr = n => { const c = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'; return Array.from(crypto.getRandomValues(new Uint8Array(n)), x => c[x % c.length]).join(''); };
 const b64url = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
-async function login() {
-  const id = $('#clientId').value.trim();
+async function login(useDefault) {
+  const id = useDefault === true ? DEFAULT_CLIENT_ID : $('#clientId').value.trim();
   if (!id) return toast('Paste your Spotify Client ID first');
   LS.set('pc_client_id', id);
   const verifier = randStr(64);
@@ -1205,6 +1214,8 @@ const toggleIn = (arr, k) => arr.includes(k) ? arr.filter(x => x !== k) : arr.co
 
 $('#btnLogin').onclick = login;
 $('#clientId').addEventListener('keydown', e => e.key === 'Enter' && login());
+$('#btnQuickLogin').onclick = () => { LS.del('pc_client_id'); login(true); };
+$('#btnOwnApp').onclick = () => { $('#setupPanel').style.display = 'block'; $('#quickLogin').style.display = 'none'; $('#clientId').focus(); };
 $('#btnLogout').onclick = () => { LS.del('pc_token'); player?.disconnect(); location.reload(); };
 $('#title').addEventListener('input', e => { state.title = e.target.value; save(); $('#btnTitleNext').disabled = !state.title.trim(); });
 $('#title').addEventListener('keydown', e => { if (e.key === 'Enter' && state.title.trim()) go('duration'); });
@@ -1297,7 +1308,10 @@ document.addEventListener('keydown', e => {
 (async () => {
   if (IS_MOBILE) document.body.classList.add('touch');
   $('#redirectUri').textContent = REDIRECT_URI;
-  $('#clientId').value = clientId();
+  $('#clientId').value = LS.get('pc_client_id', '');
+  const useOwn = !!LS.get('pc_client_id', '');
+  $('#setupPanel').style.display = useOwn ? 'block' : 'none';
+  $('#quickLogin').style.display = useOwn ? 'none' : 'block';
   if (location.protocol === 'file:') {
     $('#envWarn').innerHTML = '<div class="warn">This page is opened as a file. Spotify login needs it served locally — see the README (run <code>python3 -m http.server 8888 --bind 127.0.0.1</code> and open http://127.0.0.1:8888/).</div>';
   } else if (location.protocol === 'http:' && !['127.0.0.1', '[::1]', 'localhost'].includes(location.hostname)) {
@@ -1312,7 +1326,12 @@ document.addEventListener('keydown', e => {
     const me = await api('/me');
     $('#btnLogout').title = 'Logged in as ' + (me.display_name || me.id); $('#whoWrap').hidden = false;
   } catch (e) {
-    LS.del('pc_token'); toast('Please reconnect Spotify (' + e.message + ')', 4000); return go('connect', false);
+    LS.del('pc_token');
+    if (e.status === 403) {
+      // Development-mode Spotify apps only work for accounts the owner has added
+      $('#envWarn').innerHTML = '<div class="warn">Your Spotify account isn\'t on this app\'s list yet. Ask whoever shared it to add your Spotify email under User Management in their Spotify developer dashboard, then log in again.</div>';
+    } else toast('Please reconnect Spotify (' + e.message + ')', 4000);
+    return go('connect', false);
   }
   initPlayer();
   if (Object.keys(lists).length) go('home'); else newList();
